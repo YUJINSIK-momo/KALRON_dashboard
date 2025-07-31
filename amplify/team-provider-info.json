@@ -1,0 +1,17 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-dashboard-dev-123456-authRole",
+      "UnauthRoleName": "amplify-dashboard-dev-123456-unauthRole",
+      "StackName": "amplify-dashboard-dev-123456",
+      "StackId": "arn:aws:cloudformation:ap-northeast-2:123456789012:stack/amplify-dashboard-dev-123456/12345678-1234-1234-1234-123456789012"
+    },
+    "categories": {
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "your-app-id"
+        }
+      }
+    }
+  }
+} 
