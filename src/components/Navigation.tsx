@@ -7,7 +7,9 @@ import {
     Home,
     Settings,
     ShoppingCart,
-    Users
+    Users,
+    ChevronDown,
+    ChevronUp
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -22,15 +24,47 @@ const navigation = [
   },
   {
     name: "고객 관리",
-    href: "/customers",
     icon: Users,
-    description: "고객 목록 및 관리"
+    description: "고객 목록 및 관리",
+    subItems: [
+      {
+        name: "야구 고객",
+        href: "/customers/baseball",
+        icon: "⚾",
+        description: "야구 고객 관리"
+      },
+      {
+        name: "농구 고객",
+        href: "/customers/basketball",
+        icon: "🏀",
+        description: "농구 고객 관리"
+      },
+      {
+        name: "축구 고객",
+        href: "/customers/football",
+        icon: "⚽",
+        description: "축구 고객 관리"
+      }
+    ]
   },
   {
     name: "우커머스",
-    href: "/woocommerce",
     icon: ShoppingCart,
-    description: "주문 및 매출 현황"
+    description: "주문 및 매출 현황",
+    subItems: [
+      {
+        name: "야구 사이트",
+        href: "/woocommerce/baseball",
+        icon: "⚾",
+        description: "야구 사이트 주문"
+      },
+      {
+        name: "축구/농구 사이트",
+        href: "/woocommerce/football-basketball",
+        icon: "⚽🏀",
+        description: "축구/농구 사이트 주문"
+      }
+    ]
   },
   {
     name: "설정",
@@ -42,7 +76,21 @@ const navigation = [
 
 export default function Navigation() {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [expandedItems, setExpandedItems] = useState<string[]>([])
   const pathname = usePathname()
+
+  const toggleExpanded = (itemName: string) => {
+    setExpandedItems(prev => 
+      prev.includes(itemName) 
+        ? prev.filter(name => name !== itemName)
+        : [...prev, itemName]
+    )
+  }
+
+  const isActive = (href: string) => pathname === href
+  const isParentActive = (subItems: any[]) => {
+    return subItems?.some(item => isActive(item.href)) || false
+  }
 
   return (
     <div className={`fixed left-0 top-0 h-full bg-white/80 backdrop-blur-sm border-r border-white/20 z-40 transition-all duration-300 ${
@@ -70,30 +118,94 @@ export default function Navigation() {
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navigation.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link key={item.name} href={item.href}>
-                <div className={`
-                  flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 cursor-pointer
-                  ${isActive 
-                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg' 
-                    : 'hover:bg-white/50 text-slate-700'
-                  }
-                `}>
-                  <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-600'}`} />
-                  {!isCollapsed && (
-                    <div className="flex-1">
-                      <p className="font-medium">{item.name}</p>
-                      <p className={`text-xs ${isActive ? 'text-white/80' : 'text-slate-500'}`}>
-                        {item.description}
-                      </p>
+            const hasSubItems = item.subItems && item.subItems.length > 0
+            const isExpanded = expandedItems.includes(item.name)
+            const isParentActiveState = hasSubItems ? isParentActive(item.subItems) : isActive(item.href || '')
+
+            if (hasSubItems) {
+              return (
+                <div key={item.name}>
+                  <div 
+                    className={`
+                      flex items-center justify-between p-3 rounded-lg transition-all duration-200 cursor-pointer
+                      ${isParentActiveState 
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg' 
+                        : 'hover:bg-white/50 text-slate-700'
+                      }
+                    `}
+                    onClick={() => toggleExpanded(item.name)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <item.icon className={`h-5 w-5 ${isParentActiveState ? 'text-white' : 'text-slate-600'}`} />
+                      {!isCollapsed && (
+                        <div className="flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          <p className={`text-xs ${isParentActiveState ? 'text-white/80' : 'text-slate-500'}`}>
+                            {item.description}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {!isCollapsed && (
+                      <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {isExpanded && !isCollapsed && (
+                    <div className="ml-4 mt-2 space-y-1">
+                      {item.subItems.map((subItem) => {
+                        const isSubActive = isActive(subItem.href)
+                        return (
+                          <Link key={subItem.name} href={subItem.href}>
+                            <div className={`
+                              flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 cursor-pointer
+                              ${isSubActive 
+                                ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' 
+                                : 'hover:bg-slate-50 text-slate-600'
+                              }
+                            `}>
+                              <span className="text-sm">{subItem.icon}</span>
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">{subItem.name}</p>
+                                <p className={`text-xs ${isSubActive ? 'text-indigo-600' : 'text-slate-500'}`}>
+                                  {subItem.description}
+                                </p>
+                              </div>
+                            </div>
+                          </Link>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
-              </Link>
-            )
+              )
+            } else {
+              return (
+                <Link key={item.name} href={item.href || '#'}>
+                  <div className={`
+                    flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 cursor-pointer
+                    ${isActive(item.href || '') 
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg' 
+                      : 'hover:bg-white/50 text-slate-700'
+                    }
+                  `}>
+                    <item.icon className={`h-5 w-5 ${isActive(item.href || '') ? 'text-white' : 'text-slate-600'}`} />
+                    {!isCollapsed && (
+                      <div className="flex-1">
+                        <p className="font-medium">{item.name}</p>
+                        <p className={`text-xs ${isActive(item.href || '') ? 'text-white/80' : 'text-slate-500'}`}>
+                          {item.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              )
+            }
           })}
         </nav>
 
