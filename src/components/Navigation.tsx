@@ -12,8 +12,8 @@ import {
     ChevronUp
 } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 
 const navigation = [
   {
@@ -78,6 +78,23 @@ export default function Navigation() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [expandedItems, setExpandedItems] = useState<string[]>([])
   const pathname = usePathname()
+  const router = useRouter()
+
+  // 현재 경로에 따라 부모 메뉴 자동 열기
+  useEffect(() => {
+    const newExpandedItems: string[] = []
+    
+    navigation.forEach((item) => {
+      if (item.subItems) {
+        const isActive = item.subItems.some(subItem => pathname === subItem.href)
+        if (isActive) {
+          newExpandedItems.push(item.name)
+        }
+      }
+    })
+    
+    setExpandedItems(newExpandedItems)
+  }, [pathname])
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => 
@@ -85,6 +102,20 @@ export default function Navigation() {
         ? prev.filter(name => name !== itemName)
         : [...prev, itemName]
     )
+  }
+
+  // 서브메뉴 클릭 시 메뉴 유지
+  const handleSubItemClick = (parentName: string, href: string) => {
+    // 부모 메뉴가 확실히 열린 상태로 유지
+    setExpandedItems(prev => {
+      if (!prev.includes(parentName)) {
+        return [...prev, parentName]
+      }
+      return prev
+    })
+    
+    // 페이지 이동
+    router.push(href)
   }
 
   const isActive = (href: string) => pathname === href
@@ -160,23 +191,25 @@ export default function Navigation() {
                       {item.subItems.map((subItem) => {
                         const isSubActive = isActive(subItem.href)
                         return (
-                          <Link key={subItem.name} href={subItem.href}>
-                            <div className={`
+                          <div 
+                            key={subItem.name} 
+                            onClick={() => handleSubItemClick(item.name, subItem.href)}
+                            className={`
                               flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 cursor-pointer
                               ${isSubActive 
                                 ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' 
                                 : 'hover:bg-slate-50 text-slate-600'
                               }
-                            `}>
-                              <span className="text-sm">{subItem.icon}</span>
-                              <div className="flex-1">
-                                <p className="font-medium text-sm">{subItem.name}</p>
-                                <p className={`text-xs ${isSubActive ? 'text-indigo-600' : 'text-slate-500'}`}>
-                                  {subItem.description}
-                                </p>
-                              </div>
+                            `}
+                          >
+                            <span className="text-sm">{subItem.icon}</span>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{subItem.name}</p>
+                              <p className={`text-xs ${isSubActive ? 'text-indigo-600' : 'text-slate-500'}`}>
+                                {subItem.description}
+                              </p>
                             </div>
-                          </Link>
+                          </div>
                         )
                       })}
                     </div>
