@@ -4,17 +4,12 @@ import Navigation from "@/components/Navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-    Calendar,
     CheckCircle,
     Clock,
     Filter,
-    Mail,
-    MessageSquare,
     MoreHorizontal,
-    Phone,
     Search,
     TrendingUp,
-    UserPlus,
     Users
 } from "lucide-react"
 import { useState } from "react"
@@ -95,8 +90,6 @@ const getStageColor = (stage: string) => {
 }
 
 export default function FootballCustomersPage() {
-  const [selectedCustomer, setSelectedCustomer] = useState<FootballCustomer | null>(null)
-  const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredCustomers = footballCustomers.filter(customer =>
@@ -105,8 +98,7 @@ export default function FootballCustomersPage() {
   )
 
   const handleCustomerClick = (customer: FootballCustomer) => {
-    setSelectedCustomer(customer)
-    setShowModal(true)
+    console.log('고객 선택:', customer)
   }
 
   return (

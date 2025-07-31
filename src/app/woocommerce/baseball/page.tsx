@@ -7,11 +7,9 @@ import {
     BarChart3,
     Download,
     Eye,
-    EyeOff,
     Filter,
     Package,
-    RefreshCw,
-    TrendingUp
+    RefreshCw
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { getOrders, type WooCommerceOrder } from "@/lib/woocommerce"
@@ -37,7 +35,6 @@ const getStatusText = (status: string) => {
 }
 
 export default function BaseballWooCommercePage() {
-  const [showRevenue, setShowRevenue] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [orders, setOrders] = useState<WooCommerceOrder[]>([])
 

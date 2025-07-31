@@ -44,7 +44,7 @@ export interface WooCommerceOrder {
 }
 
 // 주문 목록 조회 (임시로 빈 배열 반환)
-export async function getOrders(page: number = 1, per_page: number = 100) {
+export async function getOrders(_page: number = 1, _per_page: number = 100) {
   console.log('우커머스 API 환경 변수가 설정되지 않았습니다.');
   return [];
 }

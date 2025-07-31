@@ -88,7 +88,7 @@ export default function Navigation() {
   }
 
   const isActive = (href: string) => pathname === href
-  const isParentActive = (subItems: any[]) => {
+  const isParentActive = (subItems: { href: string }[]) => {
     return subItems?.some(item => isActive(item.href)) || false
   }
 
