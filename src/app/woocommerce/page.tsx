@@ -18,7 +18,8 @@ import {
     TrendingUp,
     Users
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { getOrders, getOrderStats, type WooCommerceOrder } from "@/lib/woocommerce"
 
 // 샘플 우커머스 데이터
 const woocommerceData = {
@@ -129,11 +130,43 @@ const getStatusText = (status: string) => {
 export default function WooCommercePage() {
   const [showRevenue, setShowRevenue] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
+  const [orders, setOrders] = useState<WooCommerceOrder[]>([])
+  const [orderStats, setOrderStats] = useState<any>(null)
+
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const fetchOrders = async () => {
+    setIsLoading(true)
+    try {
+      const ordersData = await getOrders(1, 100)
+      setOrders(ordersData)
+      
+      const statsData = await getOrderStats()
+      setOrderStats(statsData)
+    } catch (error) {
+      console.error('주문 데이터 조회 실패:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleRefresh = () => {
-    setIsLoading(true)
-    setTimeout(() => setIsLoading(false), 2000)
+    fetchOrders()
   }
+
+  // 주문 통계 계산
+  const orderStats = {
+    total: orders.length,
+    completed: orders.filter(order => order.status === 'completed').length,
+    processing: orders.filter(order => order.status === 'processing').length,
+    pending: orders.filter(order => order.status === 'pending').length,
+    cancelled: orders.filter(order => order.status === 'cancelled').length
+  }
+
+  // 총 매출 계산
+  const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.total), 0)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -183,8 +216,10 @@ export default function WooCommercePage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-600">총 주문</p>
-                  <p className="text-2xl font-bold text-slate-800">{woocommerceData.orders.total}</p>
-                  <p className="text-xs text-emerald-600">+12% 이번 주</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {isLoading ? '...' : orderStats.total}
+                  </p>
+                  <p className="text-xs text-emerald-600">실시간 데이터</p>
                 </div>
               </div>
             </CardContent>
@@ -199,9 +234,9 @@ export default function WooCommercePage() {
                 <div>
                   <p className="text-sm text-slate-600">총 매출</p>
                   <p className="text-2xl font-bold text-slate-800">
-                    ₩{(woocommerceData.revenue.total / 1000000).toFixed(1)}M
+                    {isLoading ? '...' : `₩${(totalRevenue / 1000).toFixed(0)}K`}
                   </p>
-                  <p className="text-xs text-emerald-600">+8% 이번 주</p>
+                  <p className="text-xs text-emerald-600">실시간 데이터</p>
                 </div>
               </div>
             </CardContent>
@@ -214,9 +249,11 @@ export default function WooCommercePage() {
                   <Users className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600">총 고객</p>
-                  <p className="text-2xl font-bold text-slate-800">{woocommerceData.customers.total}</p>
-                  <p className="text-xs text-emerald-600">+5% 이번 주</p>
+                  <p className="text-sm text-slate-600">처리중</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {isLoading ? '...' : orderStats.processing}
+                  </p>
+                  <p className="text-xs text-blue-600">현재 처리중</p>
                 </div>
               </div>
             </CardContent>
@@ -229,9 +266,11 @@ export default function WooCommercePage() {
                   <Package className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600">총 상품</p>
-                  <p className="text-2xl font-bold text-slate-800">{woocommerceData.products.total}</p>
-                  <p className="text-xs text-red-600">{woocommerceData.products.lowStock}개 재고 부족</p>
+                  <p className="text-sm text-slate-600">완료</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {isLoading ? '...' : orderStats.completed}
+                  </p>
+                  <p className="text-xs text-emerald-600">완료된 주문</p>
                 </div>
               </div>
             </CardContent>
@@ -328,14 +367,18 @@ export default function WooCommercePage() {
                     <span className="text-sm text-slate-600">완료</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-slate-800">{woocommerceData.orders.completed}</span>
-                    <span className="text-xs text-slate-500">({((woocommerceData.orders.completed / woocommerceData.orders.total) * 100).toFixed(1)}%)</span>
+                    <span className="text-sm font-medium text-slate-800">
+                      {isLoading ? '...' : orderStats.completed}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {isLoading ? '...' : orderStats.total > 0 ? `(${((orderStats.completed / orderStats.total) * 100).toFixed(1)}%)` : '(0%)'}
+                    </span>
                   </div>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
                   <div 
                     className="bg-emerald-500 h-2 rounded-full transition-all duration-1000" 
-                    style={{ width: `${(woocommerceData.orders.completed / woocommerceData.orders.total) * 100}%` }}
+                    style={{ width: `${orderStats.total > 0 ? (orderStats.completed / orderStats.total) * 100 : 0}%` }}
                   ></div>
                 </div>
 
@@ -345,14 +388,18 @@ export default function WooCommercePage() {
                     <span className="text-sm text-slate-600">처리중</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-slate-800">{woocommerceData.orders.processing}</span>
-                    <span className="text-xs text-slate-500">({((woocommerceData.orders.processing / woocommerceData.orders.total) * 100).toFixed(1)}%)</span>
+                    <span className="text-sm font-medium text-slate-800">
+                      {isLoading ? '...' : orderStats.processing}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {isLoading ? '...' : orderStats.total > 0 ? `(${((orderStats.processing / orderStats.total) * 100).toFixed(1)}%)` : '(0%)'}
+                    </span>
                   </div>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
                   <div 
                     className="bg-blue-500 h-2 rounded-full transition-all duration-1000" 
-                    style={{ width: `${(woocommerceData.orders.processing / woocommerceData.orders.total) * 100}%` }}
+                    style={{ width: `${orderStats.total > 0 ? (orderStats.processing / orderStats.total) * 100 : 0}%` }}
                   ></div>
                 </div>
 
@@ -362,14 +409,18 @@ export default function WooCommercePage() {
                     <span className="text-sm text-slate-600">대기중</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-slate-800">{woocommerceData.orders.pending}</span>
-                    <span className="text-xs text-slate-500">({((woocommerceData.orders.pending / woocommerceData.orders.total) * 100).toFixed(1)}%)</span>
+                    <span className="text-sm font-medium text-slate-800">
+                      {isLoading ? '...' : orderStats.pending}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {isLoading ? '...' : orderStats.total > 0 ? `(${((orderStats.pending / orderStats.total) * 100).toFixed(1)}%)` : '(0%)'}
+                    </span>
                   </div>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
                   <div 
                     className="bg-yellow-500 h-2 rounded-full transition-all duration-1000" 
-                    style={{ width: `${(woocommerceData.orders.pending / woocommerceData.orders.total) * 100}%` }}
+                    style={{ width: `${orderStats.total > 0 ? (orderStats.pending / orderStats.total) * 100 : 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -428,29 +479,49 @@ export default function WooCommercePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {woocommerceData.recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-white/50 hover:bg-white/70 transition-all duration-200">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-xs">O</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">{order.customer}</h3>
-                      <p className="text-sm text-slate-600">{order.team} - {order.product}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-slate-800">₩{order.amount.toLocaleString()}</p>
-                      <p className="text-xs text-slate-500">{order.date}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)} text-white`}>
-                      {getStatusText(order.status)}
-                    </span>
-                  </div>
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div>
+                  <p className="text-sm text-slate-600 mt-2">주문 데이터를 불러오는 중...</p>
                 </div>
-              ))}
+              ) : orders.length > 0 ? (
+                orders.slice(0, 10).map((order) => (
+                  <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-white/50 hover:bg-white/70 transition-all duration-200">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">#{order.number}</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-800">
+                          {order.billing.first_name} {order.billing.last_name}
+                        </h3>
+                        <p className="text-sm text-slate-600">
+                          {order.line_items.map(item => item.name).join(', ')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-slate-800">
+                          {order.currency} {parseFloat(order.total).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(order.date_created).toLocaleString('ko-KR')}
+                        </p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)} text-white`}>
+                        {getStatusText(order.status)}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                  <p className="text-sm text-slate-600">주문 데이터가 없습니다</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
