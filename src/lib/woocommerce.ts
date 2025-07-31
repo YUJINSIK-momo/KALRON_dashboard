@@ -50,6 +50,14 @@ export interface WooCommerceOrder {
 
 // 주문 목록 조회
 export async function getOrders(page: number = 1, per_page: number = 100) {
+  // 환경 변수가 설정되지 않은 경우 빈 배열 반환
+  if (!process.env.NEXT_PUBLIC_WOOCOMMERCE_URL || 
+      !process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_KEY || 
+      !process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_SECRET) {
+    console.log('우커머스 API 환경 변수가 설정되지 않았습니다.');
+    return [];
+  }
+
   try {
     const response = await wooCommerceClient.get('orders', {
       page,
@@ -66,6 +74,14 @@ export async function getOrders(page: number = 1, per_page: number = 100) {
 
 // 주문 통계 조회
 export async function getOrderStats() {
+  // 환경 변수가 설정되지 않은 경우 null 반환
+  if (!process.env.NEXT_PUBLIC_WOOCOMMERCE_URL || 
+      !process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_KEY || 
+      !process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_SECRET) {
+    console.log('우커머스 API 환경 변수가 설정되지 않았습니다.');
+    return null;
+  }
+
   try {
     const response = await wooCommerceClient.get('reports/orders/totals');
     return response.data;
