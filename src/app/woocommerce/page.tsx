@@ -5,20 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     BarChart3,
-    Clock,
-    DollarSign,
     Download,
     Eye,
     EyeOff,
     Filter,
     Package,
     RefreshCw,
-    ShoppingCart,
-    TrendingUp,
-    Users
+    TrendingUp
 } from "lucide-react"
 import { useState, useEffect } from "react"
-import { getOrders, getOrderStats, type WooCommerceOrder } from "@/lib/woocommerce"
+import { getOrders, type WooCommerceOrder } from "@/lib/woocommerce"
 
 // 샘플 우커머스 데이터
 const woocommerceData = {
@@ -130,7 +126,6 @@ export default function WooCommercePage() {
   const [showRevenue, setShowRevenue] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [orders, setOrders] = useState<WooCommerceOrder[]>([])
-  const [orderStats, setOrderStats] = useState<any>(null)
 
   useEffect(() => {
     fetchOrders()
@@ -141,9 +136,6 @@ export default function WooCommercePage() {
     try {
       const ordersData = await getOrders(1, 100)
       setOrders(ordersData)
-      
-      const statsData = await getOrderStats()
-      setOrderStats(statsData)
     } catch (error) {
       console.error('주문 데이터 조회 실패:', error)
     } finally {
@@ -164,8 +156,7 @@ export default function WooCommercePage() {
     cancelled: orders.filter(order => order.status === 'cancelled').length
   }
 
-  // 총 매출 계산
-  const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.total), 0)
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
