@@ -19,6 +19,24 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 
+// Customer 타입 정의
+interface Customer {
+  id: number
+  line_user_id: string
+  line_user_name: string
+  customer_team_name: string
+  sport_type: string
+  brand: string
+  customer_type: string
+  customer_journey_stage: string
+  progress_status: string
+  last_message_date: string
+  total_payment_amount: number
+  payment_status: string
+  tracking_count: number
+  order_sequence: number
+}
+
 // 샘플 고객 데이터
 const customers = [
   {
@@ -125,7 +143,7 @@ const getStageColor = (stage: string) => {
 }
 
 export default function CustomersPage() {
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -134,7 +152,7 @@ export default function CustomersPage() {
     customer.customer_team_name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleCustomerClick = (customer: any) => {
+  const handleCustomerClick = (customer: Customer) => {
     setSelectedCustomer(customer)
     setShowModal(true)
   }
