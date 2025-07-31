@@ -12,7 +12,6 @@ import {
     EyeOff,
     Filter,
     Package,
-    PieChart,
     RefreshCw,
     ShoppingCart,
     TrendingUp,
@@ -157,7 +156,7 @@ export default function WooCommercePage() {
   }
 
   // 주문 통계 계산
-  const orderStats = {
+  const orderStatistics = {
     total: orders.length,
     completed: orders.filter(order => order.status === 'completed').length,
     processing: orders.filter(order => order.status === 'processing').length,
@@ -206,75 +205,50 @@ export default function WooCommercePage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ml-64">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center">
-                  <ShoppingCart className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">총 주문</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {isLoading ? '...' : orderStats.total}
-                  </p>
-                  <p className="text-xs text-emerald-600">실시간 데이터</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Status Filter Bar */}
+        <div className="flex items-center space-x-4 mb-6 p-4 bg-white/50 rounded-xl">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-slate-700">모두 ({orderStatistics.total})</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-slate-600">결제 대기 중 ({orderStatistics.pending})</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-slate-600">진행 중 ({orderStatistics.processing})</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-slate-600">완료 ({orderStatistics.completed})</span>
+          </div>
+        </div>
 
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-success rounded-lg flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">총 매출</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {isLoading ? '...' : `₩${(totalRevenue / 1000).toFixed(0)}K`}
-                  </p>
-                  <p className="text-xs text-emerald-600">실시간 데이터</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-secondary rounded-lg flex items-center justify-center">
-                  <Users className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">처리중</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {isLoading ? '...' : orderStats.processing}
-                  </p>
-                  <p className="text-xs text-blue-600">현재 처리중</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-warning rounded-lg flex items-center justify-center">
-                  <Package className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">완료</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {isLoading ? '...' : orderStats.completed}
-                  </p>
-                  <p className="text-xs text-emerald-600">완료된 주문</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Action Bar */}
+        <div className="flex items-center justify-between mb-6 p-4 bg-white/50 rounded-xl">
+          <div className="flex items-center space-x-4">
+            <select className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
+              <option>일괄 작업</option>
+            </select>
+            <Button variant="outline" size="sm">적용</Button>
+            
+            <select className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
+              <option>모든 날짜</option>
+            </select>
+            
+            <select className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
+              <option>모든 판매 채널</option>
+            </select>
+            
+            <Button variant="outline" size="sm">필터</Button>
+            <Button variant="outline" size="sm">Export to CSV</Button>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input 
+              type="text" 
+              placeholder="주문 검색..." 
+              className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+            />
+            <Button size="sm">주문 검색</Button>
+          </div>
         </div>
 
         {/* Revenue Toggle */}
@@ -346,39 +320,37 @@ export default function WooCommercePage() {
           </div>
         )}
 
-        {/* Charts and Analytics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Order Status Chart */}
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardHeader>
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5 text-indigo-500" />
-                <CardTitle className="text-slate-800">주문 상태</CardTitle>
-              </div>
-              <CardDescription className="text-slate-600">
-                현재 주문 상태별 분포
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                    <span className="text-sm text-slate-600">완료</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
+        {/* Order Status Chart */}
+        <Card className="glass hover:shadow-xl transition-all duration-300 mb-8">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <BarChart3 className="h-5 w-5 text-indigo-500" />
+              <CardTitle className="text-slate-800">주문 상태</CardTitle>
+            </div>
+            <CardDescription className="text-slate-600">
+              현재 주문 상태별 분포
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                  <span className="text-sm text-slate-600">완료</span>
+                </div>
+                                  <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-slate-800">
-                      {isLoading ? '...' : orderStats.completed}
+                      {isLoading ? '...' : orderStatistics.completed}
                     </span>
                     <span className="text-xs text-slate-500">
-                      {isLoading ? '...' : orderStats.total > 0 ? `(${((orderStats.completed / orderStats.total) * 100).toFixed(1)}%)` : '(0%)'}
+                      {isLoading ? '...' : orderStatistics.total > 0 ? `(${((orderStatistics.completed / orderStatistics.total) * 100).toFixed(1)}%)` : '(0%)'}
                     </span>
                   </div>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
                   <div 
                     className="bg-emerald-500 h-2 rounded-full transition-all duration-1000" 
-                    style={{ width: `${orderStats.total > 0 ? (orderStats.completed / orderStats.total) * 100 : 0}%` }}
+                    style={{ width: `${orderStatistics.total > 0 ? (orderStatistics.completed / orderStatistics.total) * 100 : 0}%` }}
                   ></div>
                 </div>
 
@@ -389,17 +361,17 @@ export default function WooCommercePage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-slate-800">
-                      {isLoading ? '...' : orderStats.processing}
+                      {isLoading ? '...' : orderStatistics.processing}
                     </span>
                     <span className="text-xs text-slate-500">
-                      {isLoading ? '...' : orderStats.total > 0 ? `(${((orderStats.processing / orderStats.total) * 100).toFixed(1)}%)` : '(0%)'}
+                      {isLoading ? '...' : orderStatistics.total > 0 ? `(${((orderStatistics.processing / orderStatistics.total) * 100).toFixed(1)}%)` : '(0%)'}
                     </span>
                   </div>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
                   <div 
                     className="bg-blue-500 h-2 rounded-full transition-all duration-1000" 
-                    style={{ width: `${orderStats.total > 0 ? (orderStats.processing / orderStats.total) * 100 : 0}%` }}
+                    style={{ width: `${orderStatistics.total > 0 ? (orderStatistics.processing / orderStatistics.total) * 100 : 0}%` }}
                   ></div>
                 </div>
 
@@ -410,121 +382,138 @@ export default function WooCommercePage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-slate-800">
-                      {isLoading ? '...' : orderStats.pending}
+                      {isLoading ? '...' : orderStatistics.pending}
                     </span>
                     <span className="text-xs text-slate-500">
-                      {isLoading ? '...' : orderStats.total > 0 ? `(${((orderStats.pending / orderStats.total) * 100).toFixed(1)}%)` : '(0%)'}
+                      {isLoading ? '...' : orderStatistics.total > 0 ? `(${((orderStatistics.pending / orderStatistics.total) * 100).toFixed(1)}%)` : '(0%)'}
                     </span>
                   </div>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
                   <div 
                     className="bg-yellow-500 h-2 rounded-full transition-all duration-1000" 
-                    style={{ width: `${orderStats.total > 0 ? (orderStats.pending / orderStats.total) * 100 : 0}%` }}
+                    style={{ width: `${orderStatistics.total > 0 ? (orderStatistics.pending / orderStatistics.total) * 100 : 0}%` }}
                   ></div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top Selling Products */}
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardHeader>
-              <div className="flex items-center space-x-2">
-                <PieChart className="h-5 w-5 text-emerald-500" />
-                <CardTitle className="text-slate-800">인기 상품</CardTitle>
-              </div>
-              <CardDescription className="text-slate-600">
-                매출 기준 상위 상품
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {woocommerceData.products.topSelling.map((product, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">{index + 1}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">{product.name}</p>
-                        <p className="text-xs text-slate-500">{product.sales}개 판매</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium text-slate-800">
-                      ₩{(product.revenue / 1000).toFixed(0)}K
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Orders */}
-        <Card className="glass hover:shadow-xl transition-all duration-300">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-amber-500" />
-                <CardTitle className="text-slate-800">최근 주문</CardTitle>
-              </div>
-              <Button className="gradient-primary text-white text-sm">
-                전체 보기
-              </Button>
-            </div>
-            <CardDescription className="text-slate-600">
-              최근 24시간 내 주문 현황
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div>
-                  <p className="text-sm text-slate-600 mt-2">주문 데이터를 불러오는 중...</p>
-                </div>
-              ) : orders.length > 0 ? (
-                orders.slice(0, 10).map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-white/50 hover:bg-white/70 transition-all duration-200">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">#{order.number}</span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-800">
-                          {order.billing.first_name} {order.billing.last_name}
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          {order.line_items.map(item => item.name).join(', ')}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-slate-800">
-                          {order.currency} {parseFloat(order.total).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {new Date(order.date_created).toLocaleString('ko-KR')}
-                        </p>
-                      </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)} text-white`}>
-                        {getStatusText(order.status)}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <Package className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-sm text-slate-600">주문 데이터가 없습니다</p>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
+
+        {/* Orders Table */}
+        <Card className="glass hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div>
+                <p className="text-sm text-slate-600 mt-2">주문 데이터를 불러오는 중...</p>
+              </div>
+            ) : orders.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <input type="checkbox" className="rounded border-slate-300" />
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        주문 ↕
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        날짜 ↕
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        상태
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        상품
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        청구
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        배송지
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        총계 ↕
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Export Status ↕
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-200">
+                    {orders.slice(0, 20).map((order) => (
+                      <tr key={order.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3">
+                          <input type="checkbox" className="rounded border-slate-300" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center space-x-2">
+                            <Eye className="h-4 w-4 text-slate-400" />
+                            <span className="text-sm font-medium text-slate-900">
+                              #{order.number} {order.billing.first_name} {order.billing.last_name}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-500">
+                          {new Date(order.date_created).toLocaleString('ko-KR', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)} text-white`}>
+                            {getStatusText(order.status)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-900">
+                          {order.line_items.map(item => item.name).join(', ')}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-500">
+                          <div>
+                            <div>{order.billing.address_1}, {order.billing.city}</div>
+                            <div className="text-xs text-slate-400">{order.payment_method_title}</div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-500">
+                          <div>
+                            <div>{order.shipping.address_1}, {order.shipping.city}</div>
+                            <div className="text-xs text-slate-400">- 送料</div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                          {order.currency} {parseFloat(order.total).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-500">
+                          -
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Package className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                <p className="text-sm text-slate-600">주문 데이터가 없습니다</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-slate-500">
+            {orderStatistics.total} 아이템
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-slate-500">총 {Math.ceil(orderStatistics.total / 20)} 페이지 중 1 번째 페이지</span>
+            <Button variant="outline" size="sm" disabled>‹</Button>
+            <Button variant="outline" size="sm">›</Button>
+          </div>
+        </div>
       </main>
     </div>
   )
