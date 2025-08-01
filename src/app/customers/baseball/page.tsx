@@ -34,6 +34,7 @@ interface BaseballCustomer {
   email?: string
   woocommerce_registered?: boolean
   last_updated?: string
+  woocommerce_payment_count: number
 }
 
 // 샘플 야구 고객 데이터
@@ -61,7 +62,8 @@ const baseballCustomers: BaseballCustomer[] = [
     phone_number: "010-1234-5678",
     email: "kim@example.com",
     woocommerce_registered: true,
-    last_updated: ""
+    last_updated: "",
+    woocommerce_payment_count: 1
   },
   {
     id: 2,
@@ -86,7 +88,8 @@ const baseballCustomers: BaseballCustomer[] = [
     phone_number: "010-2345-6789",
     email: "lee@example.com",
     woocommerce_registered: false,
-    last_updated: ""
+    last_updated: "",
+    woocommerce_payment_count: 2
   },
   {
     id: 3,
@@ -111,7 +114,8 @@ const baseballCustomers: BaseballCustomer[] = [
     phone_number: "010-3456-7890",
     email: "park@example.com",
     woocommerce_registered: true,
-    last_updated: ""
+    last_updated: "",
+    woocommerce_payment_count: 3
   },
   {
     id: 4,
@@ -132,7 +136,8 @@ const baseballCustomers: BaseballCustomer[] = [
     friend_add_status: "친구 추가됨",
     time_to_send_first_design: 0,
     time_to_complete_ordersheet_after_design: 0,
-    time_to_payment_after_ordersheet: 0
+    time_to_payment_after_ordersheet: 0,
+    woocommerce_payment_count: 0
   },
   {
     id: 5,
@@ -153,7 +158,8 @@ const baseballCustomers: BaseballCustomer[] = [
     friend_add_status: "차단됨",
     time_to_send_first_design: 0,
     time_to_complete_ordersheet_after_design: 0,
-    time_to_payment_after_ordersheet: 0
+    time_to_payment_after_ordersheet: 0,
+    woocommerce_payment_count: 1
   }
 ]
 
@@ -227,6 +233,14 @@ const getFriendAddStatusColor = (status: string) => {
   }
 }
 
+const getWooCommerceTag = (paymentCount: number) => {
+  if (paymentCount === 0) return null
+  if (paymentCount === 1) return { text: "기존", color: "bg-blue-100 text-blue-800" }
+  if (paymentCount === 2) return { text: "재구매", color: "bg-green-100 text-green-800" }
+  if (paymentCount >= 3) return { text: "VIP", color: "bg-purple-100 text-purple-800" }
+  return null
+}
+
 export default function BaseballCustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<BaseballCustomer | null>(null)
   const [showModal, setShowModal] = useState(false)
@@ -235,6 +249,8 @@ export default function BaseballCustomersPage() {
   const [monthFilter, setMonthFilter] = useState<string>("none")
   const [lastMessageFilter, setLastMessageFilter] = useState<string>("none")
   const [lastUpdated, setLastUpdated] = useState<string>("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
 
   const filteredCustomers = baseballCustomers.filter(customer => {
     const matchesSearch = customer.line_user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -257,6 +273,12 @@ export default function BaseballCustomersPage() {
     
     return matchesSearch && matchesStage && matchesMonth && matchesLastMessage
   })
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentCustomers = filteredCustomers.slice(startIndex, endIndex)
 
   const handleCustomerClick = (customer: BaseballCustomer) => {
     setSelectedCustomer(customer)
@@ -283,6 +305,7 @@ export default function BaseballCustomersPage() {
     setMonthFilter("none")
     setLastMessageFilter("none")
     setSearchTerm("")
+    setCurrentPage(1)
   }
 
   return (
@@ -320,6 +343,36 @@ export default function BaseballCustomersPage() {
               />
             </div>
             
+            {/* Stage Filter */}
+            <select
+              value={stageFilter}
+              onChange={(e) => setStageFilter(e.target.value)}
+              className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[160px] shadow-lg"
+            >
+              <option value="all">모든 단계</option>
+              <option value="친구 추가됨">친구 추가됨</option>
+              <option value="첫 메시지">첫 메시지</option>
+              <option value="첫 대화">첫 대화</option>
+              <option value="시안 요청 중">시안 요청 중</option>
+              <option value="시안 컨펌 중">시안 컨펌 중</option>
+              <option value="시안 수정 중">시안 수정 중</option>
+              <option value="디자인 진행중">디자인 진행중</option>
+              <option value="디자인 확정">디자인 확정</option>
+              <option value="오더시트 요청">오더시트 요청</option>
+              <option value="오더시트 작성">오더시트 작성</option>
+              <option value="오더시트 작성 완료">오더시트 작성 완료</option>
+              <option value="견적서 전달">견적서 전달</option>
+              <option value="결제 완료">결제 완료</option>
+              <option value="결제 대기 중">결제 대기 중</option>
+              <option value="결제 실패">결제 실패</option>
+              <option value="재 구매">재 구매</option>
+              <option value="샘플대여 요청">샘플대여 요청</option>
+              <option value="샘플발송완료">샘플발송완료</option>
+              <option value="리치메뉴만 클릭">리치메뉴만 클릭</option>
+              <option value="드랍">드랍</option>
+              <option value="오더홀딩">오더홀딩</option>
+            </select>
+
             {/* Month Filter */}
             <select
               value={monthFilter}
@@ -351,36 +404,6 @@ export default function BaseballCustomersPage() {
               <option value="2024-03">2024년 3월</option>
               <option value="2024-02">2024년 2월</option>
               <option value="2024-01">2024년 1월</option>
-            </select>
-
-            {/* Stage Filter */}
-            <select
-              value={stageFilter}
-              onChange={(e) => setStageFilter(e.target.value)}
-              className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[160px] shadow-lg"
-            >
-              <option value="all">모든 단계</option>
-              <option value="친구 추가됨">친구 추가됨</option>
-              <option value="첫 메시지">첫 메시지</option>
-              <option value="첫 대화">첫 대화</option>
-              <option value="시안 요청 중">시안 요청 중</option>
-              <option value="시안 컨펌 중">시안 컨펌 중</option>
-              <option value="시안 수정 중">시안 수정 중</option>
-              <option value="디자인 진행중">디자인 진행중</option>
-              <option value="디자인 확정">디자인 확정</option>
-              <option value="오더시트 요청">오더시트 요청</option>
-              <option value="오더시트 작성">오더시트 작성</option>
-              <option value="오더시트 작성 완료">오더시트 작성 완료</option>
-              <option value="견적서 전달">견적서 전달</option>
-              <option value="결제 완료">결제 완료</option>
-              <option value="결제 대기 중">결제 대기 중</option>
-              <option value="결제 실패">결제 실패</option>
-              <option value="재 구매">재 구매</option>
-              <option value="샘플대여 요청">샘플대여 요청</option>
-              <option value="샘플발송완료">샘플발송완료</option>
-              <option value="리치메뉴만 클릭">리치메뉴만 클릭</option>
-              <option value="드랍">드랍</option>
-              <option value="오더홀딩">오더홀딩</option>
             </select>
 
             {/* Last Message Filter */}
@@ -460,7 +483,7 @@ export default function BaseballCustomersPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredCustomers.map((customer) => (
+              {currentCustomers.map((customer) => (
                 <div
                   key={customer.id}
                   onClick={() => handleCustomerClick(customer)}
@@ -473,9 +496,15 @@ export default function BaseballCustomersPage() {
                         {customer.line_user_name.charAt(0)}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <h3 className="font-semibold text-slate-800 text-xs">{customer.line_user_name}</h3>
-                      <span className="text-xs text-slate-500">•</span>
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center space-x-1">
+                        <h3 className="font-semibold text-slate-800 text-xs">{customer.line_user_name}</h3>
+                        {getWooCommerceTag(customer.woocommerce_payment_count) && (
+                          <span className={`text-xs px-1 py-0.5 rounded-full ${getWooCommerceTag(customer.woocommerce_payment_count)?.color}`}>
+                            {getWooCommerceTag(customer.woocommerce_payment_count)?.text}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-600 truncate">{customer.customer_team_name}</p>
                     </div>
                   </div>
@@ -500,7 +529,7 @@ export default function BaseballCustomersPage() {
                   <div className="text-center">
                     <p className="text-xs text-slate-500 mb-1">결제</p>
                     <span className="text-xs font-medium text-slate-800">
-                      ₩{customer.total_payment_amount.toLocaleString()}
+                      ¥{customer.total_payment_amount.toLocaleString()}
                     </span>
                   </div>
 
@@ -527,6 +556,61 @@ export default function BaseballCustomersPage() {
                   </div>
                 </div>
               ))}
+
+              {/* 페이지네이션 */}
+              {filteredCustomers.length > itemsPerPage && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
+                  <div className="text-sm text-slate-600">
+                    {startIndex + 1}-{Math.min(endIndex, filteredCustomers.length)} / {filteredCustomers.length}개
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1"
+                    >
+                      이전
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="px-3 py-1 min-w-[40px]"
+                          >
+                            {pageNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1"
+                    >
+                      다음
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -562,6 +646,10 @@ export default function BaseballCustomersPage() {
                   <div>
                     <h3 className="font-semibold text-slate-800 mb-2">기본 정보</h3>
                     <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">팀명</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.customer_team_name}</span>
+                      </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">고객 ID</span>
                         <span className="text-sm font-medium text-slate-800">{selectedCustomer.line_user_id}</span>
@@ -644,7 +732,7 @@ export default function BaseballCustomersPage() {
                      <div className="space-y-2">
                        <div className="flex justify-between">
                          <span className="text-sm text-slate-600">총 결제 금액</span>
-                         <span className="text-sm font-medium text-slate-800">₩{selectedCustomer.total_payment_amount.toLocaleString()}</span>
+                         <span className="text-sm font-medium text-slate-800">¥{selectedCustomer.total_payment_amount.toLocaleString()}</span>
                        </div>
                        <div className="flex justify-between">
                          <span className="text-sm text-slate-600">결제 상태</span>

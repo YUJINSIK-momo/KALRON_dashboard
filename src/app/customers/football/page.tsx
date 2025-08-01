@@ -4,11 +4,8 @@ import Navigation from "@/components/Navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-    CheckCircle,
-    Clock,
-    Search,
-    TrendingUp,
-    Users
+  Search,
+  Users
 } from "lucide-react"
 import { useState } from "react"
 
@@ -33,6 +30,11 @@ interface FootballCustomer {
   time_to_send_first_design: number
   time_to_complete_ordersheet_after_design: number
   time_to_payment_after_ordersheet: number
+  phone_number?: string
+  email?: string
+  woocommerce_registered?: boolean
+  last_updated?: string
+  woocommerce_payment_count: number
 }
 
 // 샘플 축구 고객 데이터
@@ -56,7 +58,12 @@ const footballCustomers: FootballCustomer[] = [
     friend_add_status: "친구 추가됨",
     time_to_send_first_design: 2,
     time_to_complete_ordersheet_after_design: 1,
-    time_to_payment_after_ordersheet: 0
+    time_to_payment_after_ordersheet: 0,
+    phone_number: "010-1234-5678",
+    email: "kim@example.com",
+    woocommerce_registered: true,
+    last_updated: "",
+    woocommerce_payment_count: 1
   },
   {
     id: 2,
@@ -77,7 +84,12 @@ const footballCustomers: FootballCustomer[] = [
     friend_add_status: "차단됨",
     time_to_send_first_design: 3,
     time_to_complete_ordersheet_after_design: 0,
-    time_to_payment_after_ordersheet: 0
+    time_to_payment_after_ordersheet: 0,
+    phone_number: "010-2345-6789",
+    email: "lee@example.com",
+    woocommerce_registered: false,
+    last_updated: "",
+    woocommerce_payment_count: 2
   },
   {
     id: 3,
@@ -98,7 +110,12 @@ const footballCustomers: FootballCustomer[] = [
     friend_add_status: "친구 추가됨",
     time_to_send_first_design: 1,
     time_to_complete_ordersheet_after_design: 2,
-    time_to_payment_after_ordersheet: 1
+    time_to_payment_after_ordersheet: 1,
+    phone_number: "010-3456-7890",
+    email: "park@example.com",
+    woocommerce_registered: true,
+    last_updated: "",
+    woocommerce_payment_count: 3
   },
   {
     id: 4,
@@ -119,7 +136,8 @@ const footballCustomers: FootballCustomer[] = [
     friend_add_status: "친구 추가됨",
     time_to_send_first_design: 0,
     time_to_complete_ordersheet_after_design: 0,
-    time_to_payment_after_ordersheet: 0
+    time_to_payment_after_ordersheet: 0,
+    woocommerce_payment_count: 0
   },
   {
     id: 5,
@@ -140,7 +158,8 @@ const footballCustomers: FootballCustomer[] = [
     friend_add_status: "차단됨",
     time_to_send_first_design: 0,
     time_to_complete_ordersheet_after_design: 0,
-    time_to_payment_after_ordersheet: 0
+    time_to_payment_after_ordersheet: 0,
+    woocommerce_payment_count: 1
   }
 ]
 
@@ -157,10 +176,26 @@ const getStatusColor = (status: string) => {
 const getStageColor = (stage: string) => {
   switch (stage) {
     case "친구 추가됨": return "text-blue-600 bg-blue-50"
+    case "첫 메시지": return "text-purple-600 bg-purple-50"
     case "첫 대화": return "text-purple-600 bg-purple-50"
+    case "시안 요청 중": return "text-orange-600 bg-orange-50"
+    case "시안 컨펌 중": return "text-orange-600 bg-orange-50"
+    case "시안 수정 중": return "text-orange-600 bg-orange-50"
     case "디자인 진행중": return "text-orange-600 bg-orange-50"
+    case "디자인 확정": return "text-green-600 bg-green-50"
+    case "오더시트 요청": return "text-indigo-600 bg-indigo-50"
     case "오더시트 작성": return "text-indigo-600 bg-indigo-50"
+    case "오더시트 작성 완료": return "text-indigo-600 bg-indigo-50"
+    case "견적서 전달": return "text-yellow-600 bg-yellow-50"
     case "결제 완료": return "text-emerald-600 bg-emerald-50"
+    case "결제 대기 중": return "text-yellow-600 bg-yellow-50"
+    case "결제 실패": return "text-red-600 bg-red-50"
+    case "재 구매": return "text-purple-600 bg-purple-50"
+    case "샘플대여 요청": return "text-blue-600 bg-blue-50"
+    case "샘플발송완료": return "text-green-600 bg-green-50"
+    case "리치메뉴만 클릭": return "text-gray-600 bg-gray-50"
+    case "드랍": return "text-red-600 bg-red-50"
+    case "오더홀딩": return "text-yellow-600 bg-yellow-50"
     default: return "text-gray-600 bg-gray-50"
   }
 }
@@ -176,43 +211,79 @@ const getFriendAddStatusColor = (status: string) => {
   }
 }
 
+const getWooCommerceTag = (paymentCount: number) => {
+  if (paymentCount === 0) return null
+  if (paymentCount === 1) return { text: "기존", color: "bg-blue-100 text-blue-800" }
+  if (paymentCount === 2) return { text: "재구매", color: "bg-green-100 text-green-800" }
+  if (paymentCount >= 3) return { text: "VIP", color: "bg-purple-100 text-purple-800" }
+  return null
+}
+
 export default function FootballCustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<FootballCustomer | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [stageFilter, setStageFilter] = useState<string>("all")
-  const [friendDateSort, setFriendDateSort] = useState<string>("none")
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all")
+  const [monthFilter, setMonthFilter] = useState<string>("none")
+  const [lastMessageFilter, setLastMessageFilter] = useState<string>("none")
+  const [lastUpdated, setLastUpdated] = useState<string>("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
 
   const filteredCustomers = footballCustomers.filter(customer => {
     const matchesSearch = customer.line_user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          customer.customer_team_name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || customer.progress_status === statusFilter
     const matchesStage = stageFilter === "all" || customer.customer_journey_stage === stageFilter
-    const matchesPaymentStatus = paymentStatusFilter === "all" || customer.payment_status === paymentStatusFilter
     
-    return matchesSearch && matchesStatus && matchesStage && matchesPaymentStatus
-  }).sort((a, b) => {
-    if (friendDateSort === "asc") {
-      return new Date(a.friend_added_date).getTime() - new Date(b.friend_added_date).getTime()
-    } else if (friendDateSort === "desc") {
-      return new Date(b.friend_added_date).getTime() - new Date(a.friend_added_date).getTime()
+    let matchesMonth = true
+    if (monthFilter !== "none") {
+      const customerDate = new Date(customer.friend_added_date)
+      const customerYearMonth = `${customerDate.getFullYear()}-${String(customerDate.getMonth() + 1).padStart(2, '0')}`
+      matchesMonth = customerYearMonth === monthFilter
     }
-    return 0
+    
+    let matchesLastMessage = true
+    if (lastMessageFilter !== "none") {
+      const customerDate = new Date(customer.last_message_date)
+      const customerYearMonth = `${customerDate.getFullYear()}-${String(customerDate.getMonth() + 1).padStart(2, '0')}`
+      matchesLastMessage = customerYearMonth === lastMessageFilter
+    }
+    
+    return matchesSearch && matchesStage && matchesMonth && matchesLastMessage
   })
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentCustomers = filteredCustomers.slice(startIndex, endIndex)
 
   const handleCustomerClick = (customer: FootballCustomer) => {
     setSelectedCustomer(customer)
     setShowModal(true)
   }
 
+  const handleUpdateCustomer = () => {
+    const now = new Date().toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+    setLastUpdated(now)
+
+    // TODO: API 연동 시 여기에 실제 업데이트 로직 추가
+    console.log('고객 정보 업데이트:', selectedCustomer?.id)
+  }
+
   const clearFilters = () => {
-    setStatusFilter("all")
     setStageFilter("all")
-    setFriendDateSort("none")
-    setPaymentStatusFilter("all")
+    setMonthFilter("none")
+    setLastMessageFilter("none")
     setSearchTerm("")
+    setCurrentPage(1)
   }
 
   return (
@@ -249,19 +320,6 @@ export default function FootballCustomersPage() {
               />
             </div>
             
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[140px] shadow-lg"
-            >
-              <option value="all">모든 상태</option>
-              <option value="진행중">진행중</option>
-              <option value="대기중">대기중</option>
-              <option value="완료">완료</option>
-              <option value="취소">취소</option>
-            </select>
-
             {/* Stage Filter */}
             <select
               value={stageFilter}
@@ -270,42 +328,99 @@ export default function FootballCustomersPage() {
             >
               <option value="all">모든 단계</option>
               <option value="친구 추가됨">친구 추가됨</option>
+              <option value="첫 메시지">첫 메시지</option>
               <option value="첫 대화">첫 대화</option>
+              <option value="시안 요청 중">시안 요청 중</option>
+              <option value="시안 컨펌 중">시안 컨펌 중</option>
+              <option value="시안 수정 중">시안 수정 중</option>
               <option value="디자인 진행중">디자인 진행중</option>
+              <option value="디자인 확정">디자인 확정</option>
+              <option value="오더시트 요청">오더시트 요청</option>
               <option value="오더시트 작성">오더시트 작성</option>
+              <option value="오더시트 작성 완료">오더시트 작성 완료</option>
+              <option value="견적서 전달">견적서 전달</option>
               <option value="결제 완료">결제 완료</option>
+              <option value="결제 대기 중">결제 대기 중</option>
+              <option value="결제 실패">결제 실패</option>
+              <option value="재 구매">재 구매</option>
+              <option value="샘플대여 요청">샘플대여 요청</option>
+              <option value="샘플발송완료">샘플발송완료</option>
+              <option value="리치메뉴만 클릭">리치메뉴만 클릭</option>
+              <option value="드랍">드랍</option>
+              <option value="오더홀딩">오더홀딩</option>
             </select>
 
-            {/* Friend Date Sort */}
+            {/* Month Filter */}
             <select
-              value={friendDateSort}
-              onChange={(e) => setFriendDateSort(e.target.value)}
-              className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[140px] shadow-lg"
-            >
-              <option value="none">정렬 없음</option>
-              <option value="asc">오름차순</option>
-              <option value="desc">내림차순</option>
-            </select>
-
-            {/* Payment Status Filter */}
-            <select
-              value={paymentStatusFilter}
-              onChange={(e) => setPaymentStatusFilter(e.target.value)}
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
               className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[160px] shadow-lg"
             >
-              <option value="all">모든 결제 상태</option>
-              <option value="결제 완료">결제 완료</option>
-              <option value="미결제">미결제</option>
-              <option value="부분 결제">부분 결제</option>
-              <option value="환불">환불</option>
+              <option value="none">전체 기간(친구추가)</option>
+              <option value="2025-12">2025년 12월</option>
+              <option value="2025-11">2025년 11월</option>
+              <option value="2025-10">2025년 10월</option>
+              <option value="2025-09">2025년 9월</option>
+              <option value="2025-08">2025년 8월</option>
+              <option value="2025-07">2025년 7월</option>
+              <option value="2025-06">2025년 6월</option>
+              <option value="2025-05">2025년 5월</option>
+              <option value="2025-04">2025년 4월</option>
+              <option value="2025-03">2025년 3월</option>
+              <option value="2025-02">2025년 2월</option>
+              <option value="2025-01">2025년 1월</option>
+              <option value="2024-12">2024년 12월</option>
+              <option value="2024-11">2024년 11월</option>
+              <option value="2024-10">2024년 10월</option>
+              <option value="2024-09">2024년 9월</option>
+              <option value="2024-08">2024년 8월</option>
+              <option value="2024-07">2024년 7월</option>
+              <option value="2024-06">2024년 6월</option>
+              <option value="2024-05">2024년 5월</option>
+              <option value="2024-04">2024년 4월</option>
+              <option value="2024-03">2024년 3월</option>
+              <option value="2024-02">2024년 2월</option>
+              <option value="2024-01">2024년 1월</option>
+            </select>
+
+            {/* Last Message Filter */}
+            <select
+              value={lastMessageFilter}
+              onChange={(e) => setLastMessageFilter(e.target.value)}
+              className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[160px] shadow-lg"
+            >
+              <option value="none">전체 기간(대화)</option>
+              <option value="2025-12">2025년 12월</option>
+              <option value="2025-11">2025년 11월</option>
+              <option value="2025-10">2025년 10월</option>
+              <option value="2025-09">2025년 9월</option>
+              <option value="2025-08">2025년 8월</option>
+              <option value="2025-07">2025년 7월</option>
+              <option value="2025-06">2025년 6월</option>
+              <option value="2025-05">2025년 5월</option>
+              <option value="2025-04">2025년 4월</option>
+              <option value="2025-03">2025년 3월</option>
+              <option value="2025-02">2025년 2월</option>
+              <option value="2025-01">2025년 1월</option>
+              <option value="2024-12">2024년 12월</option>
+              <option value="2024-11">2024년 11월</option>
+              <option value="2024-10">2024년 10월</option>
+              <option value="2024-09">2024년 9월</option>
+              <option value="2024-08">2024년 8월</option>
+              <option value="2024-07">2024년 7월</option>
+              <option value="2024-06">2024년 6월</option>
+              <option value="2024-05">2024년 5월</option>
+              <option value="2024-04">2024년 4월</option>
+              <option value="2024-03">2024년 3월</option>
+              <option value="2024-02">2024년 2월</option>
+              <option value="2024-01">2024년 1월</option>
             </select>
 
             {/* Clear Filters */}
-            {(statusFilter !== "all" || stageFilter !== "all" || friendDateSort !== "none" || paymentStatusFilter !== "all" || searchTerm) && (
+            {(stageFilter !== "all" || monthFilter !== "none" || lastMessageFilter !== "none" || searchTerm) && (
               <Button
-                variant="ghost"
                 onClick={clearFilters}
-                className="text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-white px-3 py-2 rounded-lg border-2 border-white/30 shadow-lg font-medium"
+                className="gradient-primary text-white px-3 py-2 rounded-lg shadow-lg font-medium"
               >
                 필터 초기화
               </Button>
@@ -317,7 +432,7 @@ export default function FootballCustomersPage() {
       {/* Main Content */}
       <main className="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8 ml-64">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
           <Card className="glass hover:shadow-xl transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
@@ -327,54 +442,6 @@ export default function FootballCustomersPage() {
                 <div>
                   <p className="text-sm text-slate-600">총 축구 고객</p>
                   <p className="text-2xl font-bold text-slate-800">{footballCustomers.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-success rounded-lg flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">진행중</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {footballCustomers.filter(c => c.progress_status === "진행중").length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-warning rounded-lg flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">대기중</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {footballCustomers.filter(c => c.progress_status === "대기중").length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-secondary rounded-lg flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">완료</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {footballCustomers.filter(c => c.progress_status === "완료").length}
-                  </p>
                 </div>
               </div>
             </CardContent>
@@ -391,7 +458,7 @@ export default function FootballCustomersPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredCustomers.map((customer) => (
+              {currentCustomers.map((customer) => (
                 <div
                   key={customer.id}
                   onClick={() => handleCustomerClick(customer)}
@@ -404,9 +471,15 @@ export default function FootballCustomersPage() {
                         {customer.line_user_name.charAt(0)}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <h3 className="font-semibold text-slate-800 text-xs">{customer.line_user_name}</h3>
-                      <span className="text-xs text-slate-500">•</span>
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center space-x-1">
+                        <h3 className="font-semibold text-slate-800 text-xs">{customer.line_user_name}</h3>
+                        {getWooCommerceTag(customer.woocommerce_payment_count) && (
+                          <span className={`text-xs px-1 py-0.5 rounded-full ${getWooCommerceTag(customer.woocommerce_payment_count)?.color}`}>
+                            {getWooCommerceTag(customer.woocommerce_payment_count)?.text}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-600 truncate">{customer.customer_team_name}</p>
                     </div>
                   </div>
@@ -427,27 +500,11 @@ export default function FootballCustomersPage() {
                     </span>
                   </div>
 
-                  {/* Status */}
-                  <div className="text-center">
-                    <p className="text-xs text-slate-500 mb-1">상태</p>
-                    <span className={`text-xs px-1 py-0.5 rounded-full ${getStatusColor(customer.progress_status)} text-white`}>
-                      {customer.progress_status}
-                    </span>
-                  </div>
-
                   {/* Payment */}
                   <div className="text-center">
                     <p className="text-xs text-slate-500 mb-1">결제</p>
                     <span className="text-xs font-medium text-slate-800">
-                      ₩{customer.total_payment_amount.toLocaleString()}
-                    </span>
-                  </div>
-
-                  {/* Tracking */}
-                  <div className="text-center">
-                    <p className="text-xs text-slate-500 mb-1">추적</p>
-                    <span className="text-xs font-medium text-slate-800">
-                      {customer.tracking_count}회
+                      ¥{customer.total_payment_amount.toLocaleString()}
                     </span>
                   </div>
 
@@ -474,6 +531,61 @@ export default function FootballCustomersPage() {
                   </div>
                 </div>
               ))}
+
+              {/* 페이지네이션 */}
+              {filteredCustomers.length > itemsPerPage && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
+                  <div className="text-sm text-slate-600">
+                    {startIndex + 1}-{Math.min(endIndex, filteredCustomers.length)} / {filteredCustomers.length}개
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1"
+                    >
+                      이전
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="px-3 py-1 min-w-[40px]"
+                          >
+                            {pageNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1"
+                    >
+                      다음
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -486,14 +598,22 @@ export default function FootballCustomersPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-slate-800">축구 고객 상세 정보</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowModal(false)}
-                  className="hover:bg-gray-100"
-                >
-                  <span className="text-2xl">×</span>
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    onClick={handleUpdateCustomer}
+                    className="gradient-primary text-white"
+                  >
+                    수정
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowModal(false)}
+                    className="hover:bg-gray-100"
+                  >
+                    <span className="text-2xl">×</span>
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -502,12 +622,24 @@ export default function FootballCustomersPage() {
                     <h3 className="font-semibold text-slate-800 mb-2">기본 정보</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">팀명</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.customer_team_name}</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-sm text-slate-600">고객 ID</span>
                         <span className="text-sm font-medium text-slate-800">{selectedCustomer.line_user_id}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">고객 유형</span>
                         <span className="text-sm font-medium text-slate-800">{selectedCustomer.customer_type}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">전화번호</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.phone_number || "미등록"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">이메일</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.email || "미등록"}</span>
                       </div>
                     </div>
                   </div>
@@ -532,16 +664,6 @@ export default function FootballCustomersPage() {
                         <span className={`text-xs px-2 py-1 rounded-full ${getStageColor(selectedCustomer.customer_journey_stage)}`}>
                           {selectedCustomer.customer_journey_stage}
                         </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">상태</span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(selectedCustomer.progress_status)} text-white`}>
-                          {selectedCustomer.progress_status}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">추적 횟수</span>
-                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.tracking_count}회</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">주문 순번</span>
@@ -585,7 +707,7 @@ export default function FootballCustomersPage() {
                      <div className="space-y-2">
                        <div className="flex justify-between">
                          <span className="text-sm text-slate-600">총 결제 금액</span>
-                         <span className="text-sm font-medium text-slate-800">₩{selectedCustomer.total_payment_amount.toLocaleString()}</span>
+                         <span className="text-sm font-medium text-slate-800">¥{selectedCustomer.total_payment_amount.toLocaleString()}</span>
                        </div>
                        <div className="flex justify-between">
                          <span className="text-sm text-slate-600">결제 상태</span>
@@ -593,12 +715,26 @@ export default function FootballCustomersPage() {
                            {selectedCustomer.payment_status}
                          </span>
                        </div>
-                       <div className="flex justify-between">
-                         <span className="text-sm text-slate-600">마지막 메시지</span>
-                         <span className="text-sm font-medium text-slate-800">{selectedCustomer.last_message_date}</span>
-                       </div>
-                     </div>
-                   </div>
+                                             <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">마지막 메시지</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.last_message_date}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">우커머스 등록</span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${selectedCustomer.woocommerce_registered ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
+                          {selectedCustomer.woocommerce_registered ? '등록됨' : '미등록'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {lastUpdated && (
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-800">
+                        <span className="font-medium">마지막 갱신:</span> {lastUpdated}
+                      </p>
+                    </div>
+                  )}
 
                    <div>
                      <h3 className="font-semibold text-slate-800 mb-2">메모</h3>

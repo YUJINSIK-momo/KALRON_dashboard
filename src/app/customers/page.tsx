@@ -4,18 +4,18 @@ import Navigation from "@/components/Navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-    Calendar,
-    CheckCircle,
-    Clock,
-    Filter,
-    Mail,
-    MessageSquare,
-    MoreHorizontal,
-    Phone,
-    Search,
-    TrendingUp,
-    UserPlus,
-    Users
+  Calendar,
+  CheckCircle,
+  Clock,
+  Filter,
+  Mail,
+  MessageSquare,
+  MoreHorizontal,
+  Phone,
+  Search,
+  TrendingUp,
+  UserPlus,
+  Users
 } from "lucide-react"
 import { useState } from "react"
 
@@ -35,6 +35,7 @@ interface Customer {
   payment_status: string
   tracking_count: number
   order_sequence: number
+  woocommerce_payment_count: number
 }
 
 // 샘플 고객 데이터
@@ -53,7 +54,8 @@ const customers = [
     total_payment_amount: 150000,
     payment_status: "결제 완료",
     tracking_count: 3,
-    order_sequence: 1
+    order_sequence: 1,
+    woocommerce_payment_count: 1
   },
   {
     id: 2,
@@ -69,7 +71,8 @@ const customers = [
     total_payment_amount: 0,
     payment_status: "미결제",
     tracking_count: 1,
-    order_sequence: 2
+    order_sequence: 2,
+    woocommerce_payment_count: 2
   },
   {
     id: 3,
@@ -85,7 +88,8 @@ const customers = [
     total_payment_amount: 200000,
     payment_status: "결제 완료",
     tracking_count: 5,
-    order_sequence: 3
+    order_sequence: 3,
+    woocommerce_payment_count: 3
   },
   {
     id: 4,
@@ -101,7 +105,8 @@ const customers = [
     total_payment_amount: 0,
     payment_status: "미결제",
     tracking_count: 0,
-    order_sequence: 4
+    order_sequence: 4,
+    woocommerce_payment_count: 0
   },
   {
     id: 5,
@@ -117,7 +122,8 @@ const customers = [
     total_payment_amount: 0,
     payment_status: "미결제",
     tracking_count: 2,
-    order_sequence: 5
+    order_sequence: 5,
+    woocommerce_payment_count: 1
   }
 ]
 
@@ -142,15 +148,31 @@ const getStageColor = (stage: string) => {
   }
 }
 
+const getWooCommerceTag = (paymentCount: number) => {
+  if (paymentCount === 0) return null
+  if (paymentCount === 1) return { text: "기존", color: "bg-blue-100 text-blue-800" }
+  if (paymentCount === 2) return { text: "재구매", color: "bg-green-100 text-green-800" }
+  if (paymentCount >= 3) return { text: "VIP", color: "bg-purple-100 text-purple-800" }
+  return null
+}
+
 export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
 
   const filteredCustomers = customers.filter(customer =>
     customer.line_user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.customer_team_name.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentCustomers = filteredCustomers.slice(startIndex, endIndex)
 
   const handleCustomerClick = (customer: Customer) => {
     setSelectedCustomer(customer)
@@ -274,7 +296,7 @@ export default function CustomersPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredCustomers.map((customer) => (
+                              {currentCustomers.map((customer) => (
                 <div
                   key={customer.id}
                   onClick={() => handleCustomerClick(customer)}
@@ -288,7 +310,14 @@ export default function CustomersPage() {
                       </span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-800">{customer.line_user_name}</h3>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-semibold text-slate-800">{customer.line_user_name}</h3>
+                        {getWooCommerceTag(customer.woocommerce_payment_count) && (
+                          <span className={`text-xs px-2 py-1 rounded-full ${getWooCommerceTag(customer.woocommerce_payment_count)?.color}`}>
+                            {getWooCommerceTag(customer.woocommerce_payment_count)?.text}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-slate-600">{customer.customer_team_name}</p>
                     </div>
                   </div>
@@ -310,7 +339,7 @@ export default function CustomersPage() {
                     <div className="text-center">
                       <p className="text-xs text-slate-500">결제</p>
                       <span className="text-xs font-medium text-slate-800">
-                        ₩{customer.total_payment_amount.toLocaleString()}
+                        ¥{customer.total_payment_amount.toLocaleString()}
                       </span>
                     </div>
                     <div className="text-center">
@@ -338,6 +367,61 @@ export default function CustomersPage() {
                   </div>
                 </div>
               ))}
+
+              {/* 페이지네이션 */}
+              {filteredCustomers.length > itemsPerPage && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
+                  <div className="text-sm text-slate-600">
+                    {startIndex + 1}-{Math.min(endIndex, filteredCustomers.length)} / {filteredCustomers.length}개
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1"
+                    >
+                      이전
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="px-3 py-1 min-w-[40px]"
+                          >
+                            {pageNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1"
+                    >
+                      다음
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -366,12 +450,16 @@ export default function CustomersPage() {
                     <h3 className="font-semibold text-slate-800 mb-2">기본 정보</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">고객명</span>
-                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.line_user_name}</span>
-                      </div>
-                      <div className="flex justify-between">
                         <span className="text-sm text-slate-600">팀명</span>
                         <span className="text-sm font-medium text-slate-800">{selectedCustomer.customer_team_name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">고객 ID</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.line_user_id}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">고객명</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.line_user_name}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">스포츠</span>
@@ -421,7 +509,7 @@ export default function CustomersPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">총 결제 금액</span>
-                        <span className="text-sm font-medium text-slate-800">₩{selectedCustomer.total_payment_amount.toLocaleString()}</span>
+                        <span className="text-sm font-medium text-slate-800">¥{selectedCustomer.total_payment_amount.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">결제 상태</span>
