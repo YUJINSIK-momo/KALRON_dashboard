@@ -22,7 +22,7 @@ function normalizeStoreUrl(url: string): string {
 
 // 우커머스 API 클라이언트 생성
 export const wooCommerceClient = {
-  get: async (endpoint: string, params: Record<string, any> = {}) => {
+  get: async (endpoint: string, params: Record<string, string | number | boolean> = {}) => {
     // 환경 변수 체크
     if (!WOOCOMMERCE_STORE_URL || !WOOCOMMERCE_CONSUMER_KEY || !WOOCOMMERCE_CONSUMER_SECRET) {
       console.warn('우커머스 API 환경 변수가 설정되지 않았습니다.');
@@ -86,7 +86,7 @@ export const wooCommerceClient = {
     }
   },
 
-  post: async (endpoint: string, data: any) => {
+  post: async (endpoint: string, data: Record<string, unknown>) => {
     if (!WOOCOMMERCE_STORE_URL || !WOOCOMMERCE_CONSUMER_KEY || !WOOCOMMERCE_CONSUMER_SECRET) {
       console.warn('우커머스 API 환경 변수가 설정되지 않았습니다.');
       return { data: null };
@@ -164,10 +164,23 @@ export interface WooCommerceOrder {
     subtotal: string;
     subtotal_tax: string;
     total_tax: string;
-    taxes: any[];
-    meta_data: any[];
+    taxes: Array<{
+      id: number;
+      total: string;
+      subtotal: string;
+    }>;
+    meta_data: Array<{
+      id: number;
+      key: string;
+      value: string;
+    }>;
     sku: string;
-    image?: any;
+    image?: {
+      id: number;
+      src: string;
+      name: string;
+      alt: string;
+    };
     parent_name?: string | null;
   }>;
   payment_method: string;

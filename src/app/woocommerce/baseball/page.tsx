@@ -298,13 +298,7 @@ const getStatusColor = (status: string) => {
     }
   }
 
-const getPaymentMethodColor = (method: string) => {
-  switch (method) {
-    case "신용카드": return "bg-blue-100 text-blue-800"
-    case "계좌이체": return "bg-green-100 text-green-800"
-    default: return "bg-gray-100 text-gray-800"
-  }
-}
+
 
 // 샘플 환불 기한 계산 함수
 const calculateSampleRefundDeadline = (orderDate: string) => {

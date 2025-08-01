@@ -1,7 +1,7 @@
 import { getOrders } from '@/lib/woocommerce';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 환경 변수 확인
     const storeUrl = process.env.NEXT_PUBLIC_WOOCOMMERCE_STORE_URL;

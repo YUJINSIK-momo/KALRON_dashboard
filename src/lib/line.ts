@@ -1,8 +1,7 @@
-// 라인 API 환경 변수
-const LINE_CHANNEL_ACCESS_TOKEN = process.env.NEXT_PUBLIC_LINE_CHANNEL_ACCESS_TOKEN;
-const LINE_CHANNEL_SECRET = process.env.NEXT_PUBLIC_LINE_CHANNEL_SECRET;
+// 라인 API 환경 변수 (실제 구현 시 사용)
+// const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+// const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET;
 
-// 라인 고객 데이터 타입 정의
 export interface LineCustomer {
   id: string;
   name: string;
@@ -12,6 +11,16 @@ export interface LineCustomer {
   created_date: string;
   last_message_date: string;
   customer_journey_stage: string;
+}
+
+// WooCommerce 주문 인터페이스
+interface WooCommerceOrder {
+  billing?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+  };
 }
 
 // 라인 API 클라이언트
@@ -70,7 +79,7 @@ export const lineClient = {
 
 // WooCommerce 주문과 라인 고객 매핑 함수
 export const mapWooCommerceToLineCustomer = (
-  wooCommerceOrder: any, 
+  wooCommerceOrder: WooCommerceOrder, 
   lineCustomers: LineCustomer[]
 ): LineCustomer | null => {
   const customerName = `${wooCommerceOrder.billing?.first_name || ''} ${wooCommerceOrder.billing?.last_name || ''}`.trim();
