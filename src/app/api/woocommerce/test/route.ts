@@ -4,9 +4,9 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // 환경 변수 확인
-    const storeUrl = process.env.NEXT_PUBLIC_WOOCOMMERCE_STORE_URL;
-    const consumerKey = process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_KEY;
-    const consumerSecret = process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_SECRET;
+    const storeUrl = process.env.WOOCOMMERCE_STORE_URL;
+    const consumerKey = process.env.WOOCOMMERCE_CONSUMER_KEY;
+    const consumerSecret = process.env.WOOCOMMERCE_CONSUMER_SECRET;
 
     // 환경 변수 검증
     if (!storeUrl || !consumerKey || !consumerSecret) {
