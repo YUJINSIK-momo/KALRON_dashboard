@@ -3,18 +3,18 @@ frontend:
   phases:
     preBuild:
       commands:
-        - nvm use 18
-        - npm ci --legacy-peer-deps
+        - echo "Node.js version:"
+        - node --version
+        - echo "Installing dependencies..."
+        - npm ci
     build:
       commands:
+        - echo "Building the application..."
         - npm run build
   artifacts:
     baseDirectory: .next
     files:
       - '**/*'
-      - public/**/*
-      - package.json
-      - next.config.ts
   cache:
     paths:
       - node_modules/**/*
