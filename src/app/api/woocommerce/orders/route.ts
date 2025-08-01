@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { getOrders } from '@/lib/woocommerce'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,6 +23,22 @@ export async function GET(request: NextRequest) {
     
     console.log('API 라우트 파라미터:', { page, per_page })
     
+    // 환경 변수 검증
+    if (!storeUrl || !consumerKey || !consumerSecret) {
+      console.error('환경 변수가 설정되지 않음')
+      return NextResponse.json({
+        success: false,
+        error: '환경 변수가 설정되지 않았습니다.',
+        message: 'WooCommerce API 키가 설정되지 않았습니다.',
+        debug: {
+          envConfigured: false,
+          storeUrl: !!storeUrl,
+          consumerKey: !!consumerKey,
+          consumerSecret: !!consumerSecret
+        }
+      }, { status: 400 })
+    }
+    
     // 서버 사이드에서 WooCommerce API 호출
     console.log('WooCommerce API 호출 시작...')
     const orders = await getOrders(page, per_page)
@@ -35,9 +51,11 @@ export async function GET(request: NextRequest) {
       data: orders,
       count: orders.length,
       debug: {
-        envConfigured: !!(storeUrl && consumerKey && consumerSecret),
+        envConfigured: true,
         page,
-        per_page
+        per_page,
+        storeUrl: storeUrl,
+        hasCredentials: !!(consumerKey && consumerSecret)
       }
     })
   } catch (error) {

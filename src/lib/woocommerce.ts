@@ -45,6 +45,8 @@ export const wooCommerceClient = {
       });
 
       console.log('WooCommerce API 요청:', url.toString());
+      console.log('API 엔드포인트:', endpoint);
+      console.log('파라미터:', params);
 
       // Basic Auth 헤더 생성
       const credentials = base64Encode(`${WOOCOMMERCE_CONSUMER_KEY}:${WOOCOMMERCE_CONSUMER_SECRET}`);
@@ -60,6 +62,8 @@ export const wooCommerceClient = {
         credentials: 'omit'
       });
 
+      console.log('WooCommerce API 응답 상태:', response.status, response.statusText);
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('WooCommerce API 응답 오류:', {
@@ -73,6 +77,9 @@ export const wooCommerceClient = {
 
       const data = await response.json();
       console.log('WooCommerce API 응답 성공:', data.length || '데이터 없음');
+      console.log('응답 데이터 타입:', typeof data);
+      console.log('응답 데이터 구조:', Array.isArray(data) ? '배열' : '객체');
+      
       return { data };
     } catch (error) {
       console.error('우커머스 API 요청 실패:', error);
