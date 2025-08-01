@@ -1,0 +1,5 @@
+[33mb1ea751[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Support both NEXT_PUBLIC_ and non-prefixed environment variables for WooCommerce API
+[33mf94cfea[m Add environment variables setup guide to README
+[33m20dda80[m Update customer management and WooCommerce features: Yen currency display, team name positioning, pagination, and API integration
+[33mee762fb[m Update baseball customer page with enhanced filtering and UI improvements
+[33m2e61142[m 우커머스 대시보드 샘플 데이터 구현 및 고객 관리 UI 개선
