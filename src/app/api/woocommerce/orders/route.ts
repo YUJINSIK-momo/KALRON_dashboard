@@ -5,10 +5,10 @@ export async function GET(request: NextRequest) {
   try {
     console.log('=== API 라우트: WooCommerce 주문 조회 시작 ===')
     
-    // 환경 변수 확인
-    const storeUrl = process.env.WOOCOMMERCE_STORE_URL
-    const consumerKey = process.env.WOOCOMMERCE_CONSUMER_KEY
-    const consumerSecret = process.env.WOOCOMMERCE_CONSUMER_SECRET
+    // 환경 변수 확인 (하드코딩된 값으로 테스트)
+    const storeUrl = process.env.WOOCOMMERCE_STORE_URL || 'kalron.co'
+    const consumerKey = process.env.WOOCOMMERCE_CONSUMER_KEY || 'ck_6e0eae9b3fcbdc6fa41bbbd8643d5e5a5821e64a'
+    const consumerSecret = process.env.WOOCOMMERCE_CONSUMER_SECRET || 'cs_707fb6ac64b94ca679c83d1a7b47dfda40653a97'
     
     console.log('환경 변수 상태:', {
       storeUrl: storeUrl ? '설정됨' : '미설정',
@@ -22,22 +22,6 @@ export async function GET(request: NextRequest) {
     const per_page = parseInt(searchParams.get('per_page') || '50')
     
     console.log('API 라우트 파라미터:', { page, per_page })
-    
-    // 환경 변수 검증
-    if (!storeUrl || !consumerKey || !consumerSecret) {
-      console.error('환경 변수가 설정되지 않음')
-      return NextResponse.json({
-        success: false,
-        error: '환경 변수가 설정되지 않았습니다.',
-        message: 'WooCommerce API 키가 설정되지 않았습니다.',
-        debug: {
-          envConfigured: false,
-          storeUrl: !!storeUrl,
-          consumerKey: !!consumerKey,
-          consumerSecret: !!consumerSecret
-        }
-      }, { status: 400 })
-    }
     
     // 서버 사이드에서 WooCommerce API 호출
     console.log('WooCommerce API 호출 시작...')
