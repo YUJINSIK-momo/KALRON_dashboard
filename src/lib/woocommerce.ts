@@ -1,7 +1,7 @@
 // 우커머스 API 환경 변수
-const WOOCOMMERCE_STORE_URL = process.env.WOOCOMMERCE_STORE_URL;
-const WOOCOMMERCE_CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY;
-const WOOCOMMERCE_CONSUMER_SECRET = process.env.WOOCOMMERCE_CONSUMER_SECRET;
+const WOOCOMMERCE_STORE_URL = process.env.WOOCOMMERCE_STORE_URL || 'kalron.co';
+const WOOCOMMERCE_CONSUMER_KEY = process.env.WOOCOMMERCE_CONSUMER_KEY || 'ck_6e0eae9b3fcbdc6fa41bbbd8643d5e5a5821e64a';
+const WOOCOMMERCE_CONSUMER_SECRET = process.env.WOOCOMMERCE_CONSUMER_SECRET || 'cs_707fb6ac64b94ca679c83d1a7b47dfda40653a97';
 
 // Base64 인코딩 함수
 function base64Encode(str: string): string {
