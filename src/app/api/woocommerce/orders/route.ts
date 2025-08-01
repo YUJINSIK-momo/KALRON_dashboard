@@ -43,14 +43,18 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('API 라우트 오류:', error)
     
+    // error 타입 안전하게 처리
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+    const errorType = error instanceof Error ? error.constructor.name : 'Unknown'
+    
     return NextResponse.json(
       {
         success: false,
         error: '주문 조회 실패',
-        message: error instanceof Error ? error.message : '알 수 없는 오류',
+        message: errorMessage,
         debug: {
-          errorType: error.constructor.name,
-          errorMessage: error instanceof Error ? error.message : String(error)
+          errorType,
+          errorMessage: errorMessage
         }
       },
       { status: 500 }

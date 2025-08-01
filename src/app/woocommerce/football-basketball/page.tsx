@@ -365,7 +365,7 @@ export default function FootballBasketballWooCommercePage() {
   const [orders, setOrders] = useState<FootballBasketballOrder[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [apiConnected, setApiConnected] = useState(false)
-  const [lineCustomers, setLineCustomers] = useState<LineCustomer[]>([])
+  const [lineCustomersData, setLineCustomersData] = useState<LineCustomer[]>([])
   const [favorites, setFavorites] = useState<Set<number>>(new Set())
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -384,7 +384,7 @@ export default function FootballBasketballWooCommercePage() {
       // 라인 고객 데이터 로드
       console.log('라인 고객 데이터 로드 시작')
       const lineCustomersData = await lineClient.getCustomers()
-      setLineCustomers(lineCustomersData)
+      setLineCustomersData(lineCustomersData)
       console.log('라인 고객 데이터 로드 완료:', lineCustomersData.length, '명')
       
       // 실제 WooCommerce API에서 데이터 가져오기
