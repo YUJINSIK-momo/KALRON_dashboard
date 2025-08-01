@@ -3,14 +3,28 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // 환경 변수 확인
-    const storeUrl = process.env.WOOCOMMERCE_STORE_URL;
-    const consumerKey = process.env.WOOCOMMERCE_CONSUMER_KEY;
-    const consumerSecret = process.env.WOOCOMMERCE_CONSUMER_SECRET;
-
     console.log('=== WooCommerce API 연결 테스트 ===');
-    console.log('환경 변수:', {
-      storeUrl,
+    
+    // 모든 환경 변수 확인
+    console.log('모든 환경 변수:', {
+      WOOCOMMERCE_STORE_URL: process.env.WOOCOMMERCE_STORE_URL,
+      NEXT_PUBLIC_WOOCOMMERCE_STORE_URL: process.env.NEXT_PUBLIC_WOOCOMMERCE_STORE_URL,
+      WOOCOMMERCE_CONSUMER_KEY: process.env.WOOCOMMERCE_CONSUMER_KEY,
+      NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_KEY: process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_KEY,
+      WOOCOMMERCE_CONSUMER_SECRET: process.env.WOOCOMMERCE_CONSUMER_SECRET,
+      NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_SECRET: process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_SECRET,
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      AMPLIFY_ENV: process.env.AMPLIFY_ENV
+    });
+    
+    // 환경 변수 확인 (NEXT_PUBLIC_ 접두사 포함)
+    const storeUrl = process.env.NEXT_PUBLIC_WOOCOMMERCE_STORE_URL || process.env.WOOCOMMERCE_STORE_URL;
+    const consumerKey = process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_KEY || process.env.WOOCOMMERCE_CONSUMER_KEY;
+    const consumerSecret = process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_SECRET || process.env.WOOCOMMERCE_CONSUMER_SECRET;
+
+    console.log('환경 변수 상태:', {
+      storeUrl: storeUrl ? '설정됨' : '미설정',
       consumerKey: consumerKey ? '설정됨' : '미설정',
       consumerSecret: consumerSecret ? '설정됨' : '미설정'
     });
@@ -24,7 +38,8 @@ export async function GET() {
         debug: {
           storeUrl: !!storeUrl,
           consumerKey: !!consumerKey,
-          consumerSecret: !!consumerSecret
+          consumerSecret: !!consumerSecret,
+          allEnvVars: Object.keys(process.env).filter(key => key.includes('WOOCOMMERCE'))
         }
       }, { status: 400 });
     }

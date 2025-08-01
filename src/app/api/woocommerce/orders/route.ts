@@ -5,10 +5,10 @@ export async function GET(request: NextRequest) {
   try {
     console.log('=== API 라우트: WooCommerce 주문 조회 시작 ===')
     
-    // 환경 변수 확인
-    const storeUrl = process.env.WOOCOMMERCE_STORE_URL
-    const consumerKey = process.env.WOOCOMMERCE_CONSUMER_KEY
-    const consumerSecret = process.env.WOOCOMMERCE_CONSUMER_SECRET
+    // 환경 변수 확인 (NEXT_PUBLIC_ 접두사 포함)
+    const storeUrl = process.env.NEXT_PUBLIC_WOOCOMMERCE_STORE_URL || process.env.WOOCOMMERCE_STORE_URL
+    const consumerKey = process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_KEY || process.env.WOOCOMMERCE_CONSUMER_KEY
+    const consumerSecret = process.env.NEXT_PUBLIC_WOOCOMMERCE_CONSUMER_SECRET || process.env.WOOCOMMERCE_CONSUMER_SECRET
     
     console.log('환경 변수 상태:', {
       storeUrl: storeUrl ? '설정됨' : '미설정',
