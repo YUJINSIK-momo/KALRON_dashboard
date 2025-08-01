@@ -4,11 +4,8 @@ import Navigation from "@/components/Navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-    CheckCircle,
-    Clock,
-    Search,
-    TrendingUp,
-    Users
+  Search,
+  Users
 } from "lucide-react"
 import { useState } from "react"
 
@@ -33,6 +30,10 @@ interface BaseballCustomer {
   time_to_send_first_design: number
   time_to_complete_ordersheet_after_design: number
   time_to_payment_after_ordersheet: number
+  phone_number?: string
+  email?: string
+  woocommerce_registered?: boolean
+  last_updated?: string
 }
 
 // 샘플 야구 고객 데이터
@@ -56,7 +57,11 @@ const baseballCustomers: BaseballCustomer[] = [
     friend_add_status: "친구 추가됨",
     time_to_send_first_design: 2,
     time_to_complete_ordersheet_after_design: 1,
-    time_to_payment_after_ordersheet: 0
+    time_to_payment_after_ordersheet: 0,
+    phone_number: "010-1234-5678",
+    email: "kim@example.com",
+    woocommerce_registered: true,
+    last_updated: ""
   },
   {
     id: 2,
@@ -77,7 +82,11 @@ const baseballCustomers: BaseballCustomer[] = [
     friend_add_status: "친구 추가됨",
     time_to_send_first_design: 3,
     time_to_complete_ordersheet_after_design: 0,
-    time_to_payment_after_ordersheet: 0
+    time_to_payment_after_ordersheet: 0,
+    phone_number: "010-2345-6789",
+    email: "lee@example.com",
+    woocommerce_registered: false,
+    last_updated: ""
   },
   {
     id: 3,
@@ -98,7 +107,11 @@ const baseballCustomers: BaseballCustomer[] = [
     friend_add_status: "차단됨",
     time_to_send_first_design: 1,
     time_to_complete_ordersheet_after_design: 2,
-    time_to_payment_after_ordersheet: 1
+    time_to_payment_after_ordersheet: 1,
+    phone_number: "010-3456-7890",
+    email: "park@example.com",
+    woocommerce_registered: true,
+    last_updated: ""
   },
   {
     id: 4,
@@ -158,14 +171,46 @@ const getStageColor = (stage: string) => {
   switch (stage) {
     case "친구 추가됨":
       return "bg-blue-100 text-blue-800"
+    case "첫 메시지":
+      return "bg-purple-100 text-purple-800"
     case "첫 대화":
       return "bg-green-100 text-green-800"
+    case "시안 요청 중":
+      return "bg-orange-100 text-orange-800"
+    case "시안 컨펌 중":
+      return "bg-orange-100 text-orange-800"
+    case "시안 수정 중":
+      return "bg-orange-100 text-orange-800"
     case "디자인 진행중":
       return "bg-orange-100 text-orange-800"
+    case "디자인 확정":
+      return "bg-green-100 text-green-800"
+    case "오더시트 요청":
+      return "bg-indigo-100 text-indigo-800"
     case "오더시트 작성":
       return "bg-purple-100 text-purple-800"
+    case "오더시트 작성 완료":
+      return "bg-indigo-100 text-indigo-800"
+    case "견적서 전달":
+      return "bg-yellow-100 text-yellow-800"
     case "결제 완료":
       return "bg-emerald-100 text-emerald-800"
+    case "결제 대기 중":
+      return "bg-yellow-100 text-yellow-800"
+    case "결제 실패":
+      return "bg-red-100 text-red-800"
+    case "재 구매":
+      return "bg-purple-100 text-purple-800"
+    case "샘플대여 요청":
+      return "bg-blue-100 text-blue-800"
+    case "샘플발송완료":
+      return "bg-green-100 text-green-800"
+    case "리치메뉴만 클릭":
+      return "bg-gray-100 text-gray-800"
+    case "드랍":
+      return "bg-red-100 text-red-800"
+    case "오더홀딩":
+      return "bg-yellow-100 text-yellow-800"
     default:
       return "bg-gray-100 text-gray-800"
   }
@@ -186,26 +231,31 @@ export default function BaseballCustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<BaseballCustomer | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [stageFilter, setStageFilter] = useState<string>("all")
-  const [friendDateSort, setFriendDateSort] = useState<string>("none")
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all")
+  const [monthFilter, setMonthFilter] = useState<string>("none")
+  const [lastMessageFilter, setLastMessageFilter] = useState<string>("none")
+  const [lastUpdated, setLastUpdated] = useState<string>("")
 
   const filteredCustomers = baseballCustomers.filter(customer => {
     const matchesSearch = customer.line_user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          customer.customer_team_name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || customer.progress_status === statusFilter
     const matchesStage = stageFilter === "all" || customer.customer_journey_stage === stageFilter
-    const matchesPaymentStatus = paymentStatusFilter === "all" || customer.payment_status === paymentStatusFilter
     
-    return matchesSearch && matchesStatus && matchesStage && matchesPaymentStatus
-  }).sort((a, b) => {
-    if (friendDateSort === "asc") {
-      return new Date(a.friend_added_date).getTime() - new Date(b.friend_added_date).getTime()
-    } else if (friendDateSort === "desc") {
-      return new Date(b.friend_added_date).getTime() - new Date(a.friend_added_date).getTime()
+    let matchesMonth = true
+    if (monthFilter !== "none") {
+      const customerDate = new Date(customer.friend_added_date)
+      const customerYearMonth = `${customerDate.getFullYear()}-${String(customerDate.getMonth() + 1).padStart(2, '0')}`
+      matchesMonth = customerYearMonth === monthFilter
     }
-    return 0
+    
+    let matchesLastMessage = true
+    if (lastMessageFilter !== "none") {
+      const customerDate = new Date(customer.last_message_date)
+      const customerYearMonth = `${customerDate.getFullYear()}-${String(customerDate.getMonth() + 1).padStart(2, '0')}`
+      matchesLastMessage = customerYearMonth === lastMessageFilter
+    }
+    
+    return matchesSearch && matchesStage && matchesMonth && matchesLastMessage
   })
 
   const handleCustomerClick = (customer: BaseballCustomer) => {
@@ -213,11 +263,25 @@ export default function BaseballCustomersPage() {
     setShowModal(true)
   }
 
+  const handleUpdateCustomer = () => {
+    const now = new Date().toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+    setLastUpdated(now)
+
+    // TODO: API 연동 시 여기에 실제 업데이트 로직 추가
+    console.log('고객 정보 업데이트:', selectedCustomer?.id)
+  }
+
   const clearFilters = () => {
-    setStatusFilter("all")
     setStageFilter("all")
-    setFriendDateSort("none")
-    setPaymentStatusFilter("all")
+    setMonthFilter("none")
+    setLastMessageFilter("none")
     setSearchTerm("")
   }
 
@@ -256,17 +320,37 @@ export default function BaseballCustomersPage() {
               />
             </div>
             
-            {/* Status Filter */}
+            {/* Month Filter */}
             <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[140px] shadow-lg"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[160px] shadow-lg"
             >
-              <option value="all">모든 상태</option>
-              <option value="진행중">진행중</option>
-              <option value="대기중">대기중</option>
-              <option value="완료">완료</option>
-              <option value="취소">취소</option>
+              <option value="none">전체 기간(친구추가)</option>
+              <option value="2025-12">2025년 12월</option>
+              <option value="2025-11">2025년 11월</option>
+              <option value="2025-10">2025년 10월</option>
+              <option value="2025-09">2025년 9월</option>
+              <option value="2025-08">2025년 8월</option>
+              <option value="2025-07">2025년 7월</option>
+              <option value="2025-06">2025년 6월</option>
+              <option value="2025-05">2025년 5월</option>
+              <option value="2025-04">2025년 4월</option>
+              <option value="2025-03">2025년 3월</option>
+              <option value="2025-02">2025년 2월</option>
+              <option value="2025-01">2025년 1월</option>
+              <option value="2024-12">2024년 12월</option>
+              <option value="2024-11">2024년 11월</option>
+              <option value="2024-10">2024년 10월</option>
+              <option value="2024-09">2024년 9월</option>
+              <option value="2024-08">2024년 8월</option>
+              <option value="2024-07">2024년 7월</option>
+              <option value="2024-06">2024년 6월</option>
+              <option value="2024-05">2024년 5월</option>
+              <option value="2024-04">2024년 4월</option>
+              <option value="2024-03">2024년 3월</option>
+              <option value="2024-02">2024년 2월</option>
+              <option value="2024-01">2024년 1월</option>
             </select>
 
             {/* Stage Filter */}
@@ -277,42 +361,68 @@ export default function BaseballCustomersPage() {
             >
               <option value="all">모든 단계</option>
               <option value="친구 추가됨">친구 추가됨</option>
+              <option value="첫 메시지">첫 메시지</option>
               <option value="첫 대화">첫 대화</option>
+              <option value="시안 요청 중">시안 요청 중</option>
+              <option value="시안 컨펌 중">시안 컨펌 중</option>
+              <option value="시안 수정 중">시안 수정 중</option>
               <option value="디자인 진행중">디자인 진행중</option>
+              <option value="디자인 확정">디자인 확정</option>
+              <option value="오더시트 요청">오더시트 요청</option>
               <option value="오더시트 작성">오더시트 작성</option>
+              <option value="오더시트 작성 완료">오더시트 작성 완료</option>
+              <option value="견적서 전달">견적서 전달</option>
               <option value="결제 완료">결제 완료</option>
+              <option value="결제 대기 중">결제 대기 중</option>
+              <option value="결제 실패">결제 실패</option>
+              <option value="재 구매">재 구매</option>
+              <option value="샘플대여 요청">샘플대여 요청</option>
+              <option value="샘플발송완료">샘플발송완료</option>
+              <option value="리치메뉴만 클릭">리치메뉴만 클릭</option>
+              <option value="드랍">드랍</option>
+              <option value="오더홀딩">오더홀딩</option>
             </select>
 
-            {/* Friend Date Sort */}
+            {/* Last Message Filter */}
             <select
-              value={friendDateSort}
-              onChange={(e) => setFriendDateSort(e.target.value)}
-              className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[140px] shadow-lg"
-            >
-              <option value="none">정렬 없음</option>
-              <option value="asc">오름차순</option>
-              <option value="desc">내림차순</option>
-            </select>
-
-            {/* Payment Status Filter */}
-            <select
-              value={paymentStatusFilter}
-              onChange={(e) => setPaymentStatusFilter(e.target.value)}
+              value={lastMessageFilter}
+              onChange={(e) => setLastMessageFilter(e.target.value)}
               className="px-3 py-2 border-2 border-white/30 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200 min-w-[160px] shadow-lg"
             >
-              <option value="all">모든 결제 상태</option>
-              <option value="결제 완료">결제 완료</option>
-              <option value="미결제">미결제</option>
-              <option value="부분 결제">부분 결제</option>
-              <option value="환불">환불</option>
+              <option value="none">전체 기간(대화)</option>
+              <option value="2025-12">2025년 12월</option>
+              <option value="2025-11">2025년 11월</option>
+              <option value="2025-10">2025년 10월</option>
+              <option value="2025-09">2025년 9월</option>
+              <option value="2025-08">2025년 8월</option>
+              <option value="2025-07">2025년 7월</option>
+              <option value="2025-06">2025년 6월</option>
+              <option value="2025-05">2025년 5월</option>
+              <option value="2025-04">2025년 4월</option>
+              <option value="2025-03">2025년 3월</option>
+              <option value="2025-02">2025년 2월</option>
+              <option value="2025-01">2025년 1월</option>
+              <option value="2024-12">2024년 12월</option>
+              <option value="2024-11">2024년 11월</option>
+              <option value="2024-10">2024년 10월</option>
+              <option value="2024-09">2024년 9월</option>
+              <option value="2024-08">2024년 8월</option>
+              <option value="2024-07">2024년 7월</option>
+              <option value="2024-06">2024년 6월</option>
+              <option value="2024-05">2024년 5월</option>
+              <option value="2024-04">2024년 4월</option>
+              <option value="2024-03">2024년 3월</option>
+              <option value="2024-02">2024년 2월</option>
+              <option value="2024-01">2024년 1월</option>
             </select>
 
+
+
             {/* Clear Filters */}
-            {(statusFilter !== "all" || stageFilter !== "all" || friendDateSort !== "none" || paymentStatusFilter !== "all" || searchTerm) && (
+            {(stageFilter !== "all" || monthFilter !== "none" || lastMessageFilter !== "none" || searchTerm) && (
               <Button
-                variant="ghost"
                 onClick={clearFilters}
-                className="text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-white px-3 py-2 rounded-lg border-2 border-white/30 shadow-lg font-medium"
+                className="gradient-primary text-white px-3 py-2 rounded-lg shadow-lg font-medium"
               >
                 필터 초기화
               </Button>
@@ -324,7 +434,7 @@ export default function BaseballCustomersPage() {
       {/* Main Content */}
       <main className="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8 ml-64">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
           <Card className="glass hover:shadow-xl transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
@@ -334,54 +444,6 @@ export default function BaseballCustomersPage() {
                 <div>
                   <p className="text-sm text-slate-600">총 야구 고객</p>
                   <p className="text-2xl font-bold text-slate-800">{baseballCustomers.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-success rounded-lg flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">진행중</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {baseballCustomers.filter(c => c.progress_status === "진행중").length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-warning rounded-lg flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">대기중</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {baseballCustomers.filter(c => c.progress_status === "대기중").length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 gradient-secondary rounded-lg flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">완료</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {baseballCustomers.filter(c => c.progress_status === "완료").length}
-                  </p>
                 </div>
               </div>
             </CardContent>
@@ -434,27 +496,11 @@ export default function BaseballCustomersPage() {
                     </span>
                   </div>
 
-                  {/* Status */}
-                  <div className="text-center">
-                    <p className="text-xs text-slate-500 mb-1">상태</p>
-                    <span className={`text-xs px-1 py-0.5 rounded-full ${getStatusColor(customer.progress_status)} text-white`}>
-                      {customer.progress_status}
-                    </span>
-                  </div>
-
                   {/* Payment */}
                   <div className="text-center">
                     <p className="text-xs text-slate-500 mb-1">결제</p>
                     <span className="text-xs font-medium text-slate-800">
                       ₩{customer.total_payment_amount.toLocaleString()}
-                    </span>
-                  </div>
-
-                  {/* Tracking */}
-                  <div className="text-center">
-                    <p className="text-xs text-slate-500 mb-1">추적</p>
-                    <span className="text-xs font-medium text-slate-800">
-                      {customer.tracking_count}회
                     </span>
                   </div>
 
@@ -493,14 +539,22 @@ export default function BaseballCustomersPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-slate-800">야구 고객 상세 정보</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowModal(false)}
-                  className="hover:bg-gray-100"
-                >
-                  <span className="text-2xl">×</span>
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    onClick={handleUpdateCustomer}
+                    className="gradient-primary text-white"
+                  >
+                    수정
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowModal(false)}
+                    className="hover:bg-gray-100"
+                  >
+                    <span className="text-2xl">×</span>
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -515,6 +569,14 @@ export default function BaseballCustomersPage() {
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">고객 유형</span>
                         <span className="text-sm font-medium text-slate-800">{selectedCustomer.customer_type}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">전화번호</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.phone_number || "미등록"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">이메일</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.email || "미등록"}</span>
                       </div>
                     </div>
                   </div>
@@ -539,16 +601,6 @@ export default function BaseballCustomersPage() {
                         <span className={`text-xs px-2 py-1 rounded-full ${getStageColor(selectedCustomer.customer_journey_stage)}`}>
                           {selectedCustomer.customer_journey_stage}
                         </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">상태</span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(selectedCustomer.progress_status)} text-white`}>
-                          {selectedCustomer.progress_status}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">추적 횟수</span>
-                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.tracking_count}회</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">주문 순번</span>
@@ -600,12 +652,26 @@ export default function BaseballCustomersPage() {
                            {selectedCustomer.payment_status}
                          </span>
                        </div>
-                       <div className="flex justify-between">
-                         <span className="text-sm text-slate-600">마지막 메시지</span>
-                         <span className="text-sm font-medium text-slate-800">{selectedCustomer.last_message_date}</span>
-                       </div>
-                     </div>
-                   </div>
+                                             <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">마지막 메시지</span>
+                        <span className="text-sm font-medium text-slate-800">{selectedCustomer.last_message_date}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">우커머스 등록</span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${selectedCustomer.woocommerce_registered ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
+                          {selectedCustomer.woocommerce_registered ? '등록됨' : '미등록'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {lastUpdated && (
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-800">
+                        <span className="font-medium">마지막 갱신:</span> {lastUpdated}
+                      </p>
+                    </div>
+                  )}
 
                    <div>
                      <h3 className="font-semibold text-slate-800 mb-2">메모</h3>
