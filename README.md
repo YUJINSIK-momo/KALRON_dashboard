@@ -68,12 +68,38 @@ dashboard/
 # 의존성 설치
 npm install
 
+# 환경 변수 설정
+# .env.local 파일을 생성하고 다음 변수들을 설정하세요:
+# WOOCOMMERCE_STORE_URL=your-store-domain.com
+# WOOCOMMERCE_CONSUMER_KEY=your-consumer-key
+# WOOCOMMERCE_CONSUMER_SECRET=your-consumer-secret
+
 # 개발 서버 실행
 npm run dev
 
 # 빌드
 npm run build
 ```
+
+## 🔧 환경 변수 설정
+
+### 로컬 개발 환경
+프로젝트 루트에 `.env.local` 파일을 생성하고 다음 변수들을 설정하세요:
+
+```env
+WOOCOMMERCE_STORE_URL=your-store-domain.com
+WOOCOMMERCE_CONSUMER_KEY=your-consumer-key
+WOOCOMMERCE_CONSUMER_SECRET=your-consumer-secret
+```
+
+### 배포 환경
+배포 플랫폼(Vercel, Netlify 등)의 환경 변수 설정에서 동일한 변수들을 추가하세요.
+
+**WooCommerce API 키 설정 방법:**
+1. WooCommerce 관리자 페이지 → 설정 → 고급 → REST API
+2. "키 추가" 클릭
+3. 권한을 "읽기/쓰기"로 설정
+4. 생성된 Consumer Key와 Consumer Secret을 환경 변수에 설정
 
 ## 📱 페이지 구성
 
